@@ -18,6 +18,7 @@ To view on web browser: HOST_IP:8080/koji
 ## Build RPM package
 Change to 'admin' user:
 ```shell
+vagrant ssh server
 sudo bash
 su - admin
 ```
