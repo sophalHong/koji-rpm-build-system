@@ -1,0 +1,98 @@
+require File.expand_path('../provision-disk-and-reboot-plugin.rb', __FILE__)
+
+# Node ID if it is a node
+BUILDER = ENV['BUILDER'].to_s.strip.empty? ? 0 : ENV['BUILDER'].to_i
+
+# Vagrantfile provider to use
+VAGRANT_DEFAULT_PROVIDER = ENV['VAGRANT_DEFAULT_PROVIDER'].to_s.strip.empty? ? 'virtualbox'.freeze : ENV['VAGRANT_DEFAULT_PROVIDER']
+
+# Load the Vagrantfile_vars file
+$vagrantfilevars = File.expand_path('../vars', __FILE__)
+load $vagrantfilevars
+
+# Load the `scripts` file
+$vagrantfilescripts = File.expand_path('../scripts', __FILE__)
+load $vagrantfilescripts
+
+# Load the type specific variables (e.g., server, builder) (0 is equal server)
+if BUILDER == 0
+    $box_image = "prolinux/koji-server"
+    $hostname = 'server'
+    $vmip = SERVER_IP
+    $vmCPUs = SERVER_CPUS
+    $vmMemory = SERVER_MEMORY_SIZE_GB * 1024
+	$diskCount = DISK_COUNT
+	$builderCount = BUILDER_COUNT
+else
+    $box_image = "prolinux/koji-builder"
+    $hostname = "builder-#{BUILDER}"
+    $vmip = BUILDER_IP
+    $vmCPUs = BUILDER_CPUS
+    $vmMemory = BUILDER_MEMORY_SIZE_GB * 1024
+	$diskCount = DISK_COUNT
+	$serverIP = SERVER_IP
+end
+
+Vagrant.configure('2') do |config|
+    config.vm.box = $box_image
+    config.vm.box_check_update = true
+
+    config.vm.boot_timeout = 900
+
+    config.vm.provider VAGRANT_DEFAULT_PROVIDER do |l|
+        # Configure resources
+        l.cpus = $vmCPUs
+        l.memory = $vmMemory
+    end
+
+    config.vm.define $hostname do |subconfig|
+        subconfig.vm.hostname = $hostname
+
+        # Virtualbox
+        subconfig.vm.provider :virtualbox do |vb|
+            vb.customize ['modifyvm', :id, '--uartmode1', 'disconnected']
+            # Network configuration
+            vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
+        end
+
+        subconfig.vm.network :private_network,
+            :ip => $vmip
+
+        subconfig.vm.synced_folder "data/#{$hostname}/", '/data', type: 'rsync',
+            create: true, owner: 'root', group: 'root',
+            rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
+
+        # Try to copy the user install scripts first, so we fail early
+        if $userPostInstallScript != ""
+            subconfig.vm.provision :file, source: $userPostInstallScript, destination: "/home/vagrant/userPostInstallScript.sh"
+        end
+        # Add SSH pub key from user if specified
+        if $userSSHPubKey != ""
+            subconfig.vm.provision :file, source: $userSSHPubKey, destination: "~/.ssh/user.pub"
+            subconfig.vm.provision :shell, inline: 'cat /home/vagrant/.ssh/user.pub >> /home/vagrant/.ssh/authorized_keys'
+        end
+        # Run diskandreboot plugin to add VirtualBox disks to VMs
+        if DISK_COUNT > 0 && VAGRANT_DEFAULT_PROVIDER == 'virtualbox'
+            subconfig.vm.provision :diskandreboot
+        end
+        # Builder Provision
+        if $hostname.include? "builder"
+            subconfig.vm.provision :shell, inline: $builderMountNFS, args: $serverIP
+            subconfig.vm.provision :shell, inline: $builderKojidService, args: $hostname
+        end
+        # Server Provision
+        if $hostname == 'server'
+			subconfig.vm.network 'forwarded_port', guest: 80, host: 8080
+            if $serverLocalNFS != ""
+                subconfig.vm.provision :shell, inline: $serverLocalNFS
+            end
+			(1..$builderCount).each do |i|
+				subconfig.vm.provision :shell, inline: $serverAddBuilder, args: "builder-#{i}"
+			end
+        end
+
+        if $userPostInstallScript != ""
+            subconfig.vm.provision :shell, inline: 'echo "Execute userPostInstallScript"; bash /home/vagrant/userPostInstallScript.sh'
+        end
+    end
+end
