@@ -64,8 +64,7 @@ versions: ## Print the "imporant" tools versions out for easier debugging.
 	-@echo "libvirtd version: $$(libvirtd --version)"
 	@echo "=== END Version Info ==="
 
-up: ## Start Koji Vagrant multi-node cluster. starts and bootsup the server and builder VMs.
-	@$(MAKE) start --no-print-directory
+up: start ## Start Koji Vagrant multi-node cluster. starts and bootsup the server and builder VMs.
 
 start:
 ifeq ($(PARALLEL_VM_START),true)
@@ -136,7 +135,7 @@ ssh-config-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "
 ssh-config-builder-%: ## Generate SSH config just for the one builder number given.
 	@BUILDER=$* $(VAGRANT) ssh-config --host "builder$*"
 
-status: status-server $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "status-builder-$$i"; done) ## Show status of server and all builder VMs.
+status: status-server status-builders ## Show status of server and all builder VMs.
 
 status-server: ## Show status of the server VM.
 	@set -o pipefail; \
@@ -167,7 +166,7 @@ help: ## Show this help menu.
 
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
-.PHONY: clean clean-server clean-builders \
+.PHONY: clean clean-server clean-builders clean-data \
 	help \
 	show-env-config \
 	ssh-config ssh-config-server ssh-config-builders \

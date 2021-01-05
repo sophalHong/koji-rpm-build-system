@@ -25,9 +25,13 @@ This project is created to automatically deploy **koji** build system environmen
 
 ## Prerequisites
 
-* Vagrant (>= `2.2.0`)  
+* Vagrant (>= `2.2.0`)
+  * Plugins
+    * vagrant-reload (vagrant plugin install vagrant-reload)
+    * vagrant-libvirt (vagrant plugin install vagrant-libvirt)
 * Vagrant Provider  
   * Virtualbox
+  * libvirt (qemu)
 
 ## Hardware Requirements
 
@@ -94,6 +98,7 @@ Usage: make [TARGET ...]
 clean-builder-%                Remove a builder VM, where `%` is the number of the builder.
 clean-builders                 Remove all builder VMs.
 clean                          Destroy server and builder VMs.
+clean-data                     Remove data (shared folders) and disks of all VMs (server and builders).
 clean-force                    Remove all drives which should normally have been removed by the normal clean-server or clean-builder-% targets.
 clean-server                   Remove the server VM.
 help                           Show this help menu.
@@ -133,10 +138,11 @@ versions                       Print the "imporant" tools versions out for easie
 | `BUILDER_COUNT`                 | `2`                      | How many worker builders should be spawned.                             |
 | `BUILDER_CPUS`                  | `1` Core                 | Amount of cores to use for each builder VM.                             |
 | `BUILDER_MEMORY_SIZE_GB`        | `2` GB                   | Size of memory (in GB) to be allocated for each builder VM.             |
-| `SERVER_IP`                     | `192.168.26.10`          | The Kubernetes server builder IP.                                       |
-| `BUILDER_IP_NW`                 | `192.168.26.`            | The first three parts of the IPs used for the builders.                 |
 | `DISK_COUNT`                    | `0`                      | Set how many additional disks will be added to the VMs.                 |
 | `DISK_SIZE_GB`                  | `20` GB                  | Size of additional disks added to the VMs.                              |
+| `PRIVATE_IP`                    | `192.168.83.10`          | The Koji-hub server Private IP address. (builder IP = server IP ++)     |
+| `PUBLIC_IP`                     | ``                       | The Koji-hub server Public IP address.  (builder IP = server IP ++)     |
+| `PUBLIC_NW_NIC`                 | ``                       | Public Network Interface [eno1]. Not set mean using private network     |
 
 ## Build RPM package
 SSH into server VM:
