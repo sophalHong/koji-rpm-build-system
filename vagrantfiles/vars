@@ -13,17 +13,28 @@ SERVER_MEMORY_SIZE_GB = ENV['SERVER_MEMORY_SIZE_GB'].to_s.strip.empty? ? 2 : ENV
 BUILDER_CPUS = ENV['BUILDER_CPUS'].to_s.strip.empty? ? 1 : ENV['BUILDER_CPUS'].to_i
 BUILDER_MEMORY_SIZE_GB = ENV['BUILDER_MEMORY_SIZE_GB'].to_s.strip.empty? ? 2 : ENV['BUILDER_MEMORY_SIZE_GB'].to_i
 
-# BOX_OS specific fixes
-## Currently only used by ubuntu
-$docker_version = ''
+# Network
+if ENV['PUBLIC_NW_NIC'].to_s.strip.empty?
+	$isPrivateNetwork = true
+	PUBLIC_NW_NIC = ''
+	SERVER_IP = ENV['PRIVATE_IP'].to_s.strip.empty? ? '192.168.83.10' : ENV['PRIVATE_IP']
+	BUILDER_IP = SERVER_IP[0...SERVER_IP.rindex('.')] + '.' \
+		+ (BUILDER + SERVER_IP.split(".").last.to_i).to_s
+else
+	$isPrivateNetwork = false
+	PUBLIC_NW_NIC = ENV['PUBLIC_NW_NIC']
+	if ENV['PUBLIC_IP'].to_s.strip.empty?
+		SERVER_IP = ''
+		BUILDER_IP = ''
+	else
+		SERVER_IP = ENV['PUBLIC_IP']
+		BUILDER_IP = SERVER_IP[0...SERVER_IP.rindex('.')] + '.' \
+			+ (BUILDER + SERVER_IP.split(".").last.to_i).to_s
+	end
+end
 
 # Libvirt specific config
 LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'].to_s.strip.empty? ? 'default' : ENV['LIBVIRT_STORAGE_POOL']
-
-# Network
-SERVER_IP = ENV['SERVER_IP'].to_s.strip.empty? ? '192.168.83.10' : ENV['SERVER_IP']
-BUILDER_IP_NW = ENV['BUILDER_IP_NW'].to_s.strip.empty? ? '192.168.83.' : ENV['BUILDER_IP_NW']
-BUILDER_IP = BUILDER_IP_NW + (BUILDER + SERVER_IP.split(".").last.to_i).to_s
 
 $userSSHPubKey = ENV['USER_SSHPUBKEY'].to_s.strip.empty? ? '' : ENV['USER_SSHPUBKEY']
 

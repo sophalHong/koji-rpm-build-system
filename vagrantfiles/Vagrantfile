@@ -29,8 +29,8 @@ else
     $vmip = BUILDER_IP
     $vmCPUs = BUILDER_CPUS
     $vmMemory = BUILDER_MEMORY_SIZE_GB * 1024
-	$diskCount = DISK_COUNT
-	$serverIP = SERVER_IP
+    $diskCount = DISK_COUNT
+    $serverIP = (SERVER_IP.empty? and File.exist?("./data/server/IP")) ? File.read("./data/server/IP") : SERVER_IP
 end
 
 Vagrant.configure('2') do |config|
@@ -68,12 +68,23 @@ Vagrant.configure('2') do |config|
             vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'on']
         end
 
-        subconfig.vm.network :private_network,
-            :ip => $vmip
+        # Network
+        if $isPrivateNetwork
+            subconfig.vm.network :private_network, :ip => $vmip
+        else
+            subconfig.vm.network :public_network,
+                :bridge => PUBLIC_NW_NIC,
+                :dev => PUBLIC_NW_NIC,
+                :mode => "bridge",
+                :ip => $vmip
+        end
 
-        subconfig.vm.synced_folder "data/#{$hostname}/", '/data', type: 'rsync',
-            create: true, owner: 'root', group: 'root',
-            rsync__args: ["--rsync-path='sudo rsync'", '--archive', '--delete', '-z']
+		# Synced Folder
+        if VAGRANT_DEFAULT_PROVIDER == 'libvirt'
+            subconfig.vm.synced_folder "data/#{$hostname}/", '/vagrant', create: true, type: 'nfs'
+        else
+            subconfig.vm.synced_folder "data/#{$hostname}/", '/vagrant', create: true
+        end
 
         # Try to copy the user install scripts first, so we fail early
         if $userPostInstallScript != ""

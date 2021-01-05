@@ -24,8 +24,11 @@ BUILDER_COUNT ?= 1
 # Libvirt
 LIBVIRT_STORAGE_POOL ?=
 # Network
-SERVER_IP ?= 192.168.83.10
-BUILDER_IP_NW ?= 192.168.83.
+## Private Network (Server ip = PRIVATE_IP, Builder ip = PRIVATE_IP++)
+## Public Network (PUBLIC_NW_NIC=eno1) | Not set = using private network
+PRIVATE_IP ?= 192.168.83.10
+PUBLIC_NW_NIC ?=
+PUBLIC_IP ?=
 # === END USER OPTIONS ===
 
 VAGRANT_LOG ?=
@@ -62,14 +65,14 @@ versions: ## Print the "imporant" tools versions out for easier debugging.
 	@echo "=== END Version Info ==="
 
 up: ## Start Koji Vagrant multi-node cluster. starts and bootsup the server and builder VMs.
-	$(MAKE) start
+	@$(MAKE) start --no-print-directory
 
 start:
 ifeq ($(PARALLEL_VM_START),true)
-	$(MAKE) start-server start-builders
+	@$(MAKE) start-server start-builders --no-print-directory
 else
-	$(MAKE) start-server
-	$(MAKE) start-builders
+	@$(MAKE) start-server --no-print-directory
+	@$(MAKE) start-builders --no-print-directory
 endif
 
 start-server: ## Start up server VM (automatically done by `up` target).
@@ -97,6 +100,7 @@ ssh-builder-%: ## SSH into a builder VM, where `%` is the number of the builder.
 	BUILDER=$* $(VAGRANT) ssh
 
 clean: clean-server $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "clean-builder-$$i"; done) ## Destroy server and builder VMs.
+	@$(MAKE) clean-data --no-print-directory
 
 clean-server: ## Remove the server VM.
 	-$(VAGRANT) destroy -f
@@ -106,8 +110,11 @@ clean-builder-%: ## Remove a builder VM, where `%` is the number of the builder.
 
 clean-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "clean-builder-$$i"; done) ## Remove all builder VMs.
 
+clean-data: ## Remove data (shared folders) and disks of all VMs (server and builders).
+	@rm -v -rf "$(MFILECWD)/data/"*
+
 clean-force: ## Remove all drives which should normally have been removed by the normal clean-server or clean-builder-% targets.
-	rm -v -rf "$(MFILECWD)/.vagrant/"*.vdi "$(MFILECWD)/.vagrant/"*.img
+	@rm -v -rf "$(MFILECWD)/.vagrant/"*.vdi "$(MFILECWD)/.vagrant/"*.img
 
 vagrant-reload: vagrant-reload-server vagrant-reload-builders ## Run vagrant reload on server and builders.
 

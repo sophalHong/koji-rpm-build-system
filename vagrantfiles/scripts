@@ -2,6 +2,8 @@
 
 #Server
 $serverLocalNFS = <<SCRIPT
+ip -f inet a show eth1| grep inet| awk '{ print $2}' | cut -d/ -f1 > /vagrant/IP
+
 dnf install nfs-utils -y
 echo '/mnt/koji *(rw,sync,no_all_squash,root_squash)' >> /etc/exports
 echo '/etc/pki/koji *(ro,sync,no_all_squash,root_squash)' >> /etc/exports
