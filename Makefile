@@ -3,11 +3,14 @@ SHELL := /usr/bin/env bash
 
 # Set Makefile directory in variable for referencing other files
 MFILECWD = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+BUILDER_CACHE_FILE ?= $(MFILECWD)data/.BUILDER_COUNT.cache
+VAGRANT_VAGRANTFILE ?= $(MFILECWD)vagrantfiles/Vagrantfile
+
+VAGRANT ?= vagrant
+VAGRANT_LOG ?=
 
 # sed 1-liner to reverse the lines in an input stream
 REVERSE_LINES=sed -e '1!G;h;$$!d'
-
-VAGRANT ?= vagrant
 
 # === BEGIN USER OPTIONS ===
 # Vagrant Provider
@@ -20,7 +23,11 @@ SERVER_CPUS ?= 2
 SERVER_MEMORY_SIZE_GB ?= 2
 BUILDER_CPUS ?= 1
 BUILDER_MEMORY_SIZE_GB ?= 2
+ifeq (,$(wildcard $(BUILDER_CACHE_FILE)))
 BUILDER_COUNT ?= 1
+else
+BUILDER_COUNT ?= `cat $(BUILDER_CACHE_FILE)`
+endif
 # Libvirt
 LIBVIRT_STORAGE_POOL ?=
 # Network
@@ -30,9 +37,6 @@ PRIVATE_IP ?= 192.168.83.10
 PUBLIC_NW_NIC ?=
 PUBLIC_IP ?=
 # === END USER OPTIONS ===
-
-VAGRANT_LOG ?=
-VAGRANT_VAGRANTFILE ?= $(MFILECWD)/vagrantfiles/Vagrantfile
 
 show-env-config: ## Show all Environment values configuration used to create VMs.
 	@echo "==== Environment Info ===="
@@ -81,6 +85,7 @@ start-builder-%: ## Start builder VM, where `%` is the number of the builder.
 	BUILDER=$* $(VAGRANT) up --provider $(VAGRANT_DEFAULT_PROVIDER)
 
 start-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "start-builder-$$i"; done) ## Create and start all builder VMs by utilizing the `builder-X` target (automatically done by `up` target).
+	@echo $(BUILDER_COUNT) > $(BUILDER_CACHE_FILE)
 
 stop: stop-server $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "stop-builder-$$i"; done) ## Stop/Halt server and all builder VMs.
 
@@ -98,8 +103,7 @@ ssh-server: ## SSH into the server VM.
 ssh-builder-%: ## SSH into a builder VM, where `%` is the number of the builder.
 	BUILDER=$* $(VAGRANT) ssh
 
-clean: clean-server $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "clean-builder-$$i"; done) ## Destroy server and builder VMs.
-	@$(MAKE) clean-data --no-print-directory
+clean: clean-server clean-builders clean-data ## Destroy server and builder VMs.
 
 clean-server: ## Remove the server VM.
 	-$(VAGRANT) destroy -f
@@ -110,10 +114,11 @@ clean-builder-%: ## Remove a builder VM, where `%` is the number of the builder.
 clean-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "clean-builder-$$i"; done) ## Remove all builder VMs.
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (server and builders).
-	@rm -v -rf "$(MFILECWD)/data/"*
+	@rm -v -rf "$(MFILECWD)data/"*
+	@rm -rf $(BUILDER_CACHE_FILE)
 
 clean-force: ## Remove all drives which should normally have been removed by the normal clean-server or clean-builder-% targets.
-	@rm -v -rf "$(MFILECWD)/.vagrant/"*.vdi "$(MFILECWD)/.vagrant/"*.img
+	@rm -v -rf "$(MFILECWD).vagrant/"*.vdi "$(MFILECWD).vagrant/"*.img
 
 vagrant-reload: vagrant-reload-server vagrant-reload-builders ## Run vagrant reload on server and builders.
 
