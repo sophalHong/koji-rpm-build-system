@@ -2,7 +2,9 @@
 
 #Server
 $serverLocalNFS = <<SCRIPT
-ip -f inet a show eth1| grep inet| awk '{ print $2}' | cut -d/ -f1 > /vagrant/IP
+dir=/vagrant/server
+mkdir -p ${dir}
+ip -f inet a show eth1| grep inet| awk '{ print $2}' | cut -d/ -f1 > ${dir}/IP
 
 dnf install nfs-utils -y
 echo '/mnt/koji *(rw,sync,no_all_squash,root_squash)' >> /etc/exports
@@ -15,15 +17,18 @@ systemctl status nfs-server.service --no-pager
 SCRIPT
 
 $serverAddBuilder = <<SCRIPT
-cd /etc/pki/koji
-caname=koji
 builder=$1
+cd /etc/pki/koji
 openssl genrsa -out certs/${builder}.key 2048
 cat ssl.cnf | sed 's/YOUR_KOJI_HOSTNAME/'${builder}'/'> ssl2.cnf
 openssl req -config ssl2.cnf -new -nodes -out certs/${builder}.csr -key certs/${builder}.key -subj "/C=KO/ST=Gyeonggi/O=TmaxA&C/CN=${builder}"
-openssl ca -batch -config ssl2.cnf -keyfile private/${caname}_ca_cert.key -cert ${caname}_ca_cert.crt -out certs/${builder}.crt -outdir certs -infiles certs/${builder}.csr
+openssl ca -batch -config ssl2.cnf -keyfile private/koji_ca_cert.key -cert koji_ca_cert.crt -out certs/${builder}.crt -outdir certs -infiles certs/${builder}.csr
 cat certs/${builder}.crt certs/${builder}.key > ${builder}.pem
 mv ssl2.cnf config/${builder}-ssl.cnf
+
+mkdir -p /vagrant/${builder}
+cp ${builder}.pem /vagrant/${builder}
+cp koji_ca_cert.crt /vagrant/server/
 
 runuser -u admin -- koji add-host ${builder} x86_64
 runuser -u admin -- koji add-host-to-channel ${builder} createrepo
@@ -31,15 +36,50 @@ SCRIPT
 
 # Builder
 $builderMountNFS = <<SCRIPT
-echo "$1 koji.tmax" >> /etc/hosts
+retries=5
 mkdir -p /mnt/koji
-mount -t nfs koji.tmax:/mnt/koji /mnt/koji
-mkdir -p /etc/pki/koji
-mount -t nfs koji.tmax:/etc/pki/koji /etc/pki/koji
+
+for ((i=1; i<=retries; i++)); do
+	mount -t nfs $1 /mnt/koji && break
+	[[ $retries -eq i ]] && { echo "Failed to mount `$1` after 5 tries"; exit 1; }
+    echo "NFS mount failed, trying again (try ${i}/${retries})..."
+	sleep 3
+done
 SCRIPT
 
-$builderKojidService = <<SCRIPT
-sed -i "s/KOJID_USER/$1/g" /etc/kojid/kojid.conf
+$builderKojidConf = <<SCRIPT
+BUILDER_NAME=$1
+SERVER_IP=`cat /vagrant/server/IP`
+echo "$SERVER_IP koji.tmax" >> /etc/hosts
+
+mkdir -p /etc/pki/koji
+cp -v /vagrant/${BUILDER_NAME}/${BUILDER_NAME}.pem /etc/pki/koji/
+cp -v /vagrant/server/koji_ca_cert.crt /etc/pki/koji/
+
+yum install -y koji-builder
+mv /etc/kojid/kojid.conf /etc/kojid/kojid.conf.old
+
+cat > /etc/kojid/kojid.conf <<EOF
+[kojid]
+user=${BUILDER_NAME}
+topdir=/mnt/koji
+workdir=/tmp/koji
+vendor=Tmax A&C Co., Ltd.
+distribution=TmaxA&C
+packager=Tmax A&C Co., Ltd. <https://technet.tmaxsoft.com/>
+mockhost=redhat-linux-gnu
+oz_install_timeout=7200
+allowed_scms=scm.example.com:/cvs/example git.example.org:/example svn.example.org:/users/*:no
+smtphost=mail.tmax.co.kr:587
+from_addr=ProLinux Koji Build System <sophal_hong@tmax.co.kr>
+admin_emails=sophal_hong@tmax.co.kr
+server=http://koji.tmax/kojihub
+topurl=http://koji.tmax/kojifiles
+cert = /etc/pki/koji/${BUILDER_NAME}.pem
+serverca = /etc/pki/koji/koji_ca_cert.crt
+ca = /etc/pki/koji/koji_ca_cert.crt
+EOF
+
 systemctl enable kojid.service
 systemctl start kojid.service
 systemctl status kojid.service --no-pager

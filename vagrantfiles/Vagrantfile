@@ -19,9 +19,9 @@ if BUILDER == 0
     $box_image = "prolinux/koji-server"
     $hostname = 'server'
     $vmip = SERVER_IP
+    $port = FWD_PORT
     $vmCPUs = SERVER_CPUS
     $vmMemory = SERVER_MEMORY_SIZE_GB * 1024
-	$diskCount = DISK_COUNT
 	$builderCount = BUILDER_COUNT
 else
     $box_image = "prolinux/koji-builder"
@@ -29,8 +29,7 @@ else
     $vmip = BUILDER_IP
     $vmCPUs = BUILDER_CPUS
     $vmMemory = BUILDER_MEMORY_SIZE_GB * 1024
-    $diskCount = DISK_COUNT
-    $serverIP = (SERVER_IP.empty? and File.exist?("./data/server/IP")) ? File.read("./data/server/IP") : SERVER_IP
+    $serverIP = (SERVER_IP.empty? and File.exist?("./data/server/IP")) ? File.read("./data/server/IP").strip : SERVER_IP
 end
 
 Vagrant.configure('2') do |config|
@@ -81,9 +80,9 @@ Vagrant.configure('2') do |config|
 
 		# Synced Folder
         if VAGRANT_DEFAULT_PROVIDER == 'libvirt'
-            subconfig.vm.synced_folder "data/#{$hostname}/", '/vagrant', create: true, type: 'nfs'
+            subconfig.vm.synced_folder "data", '/vagrant', create: true, type: 'nfs'
         else
-            subconfig.vm.synced_folder "data/#{$hostname}/", '/vagrant', create: true
+            subconfig.vm.synced_folder "data", '/vagrant', create: true
         end
 
         # Try to copy the user install scripts first, so we fail early
@@ -101,12 +100,18 @@ Vagrant.configure('2') do |config|
         end
         # Builder Provision
         if $hostname.include? "builder"
-            subconfig.vm.provision :shell, inline: $builderMountNFS, args: $serverIP
-            subconfig.vm.provision :shell, inline: $builderKojidService, args: $hostname
+            subconfig.vm.provision :shell,
+                :inline => $builderMountNFS,
+                :args => "#{$serverIP}:/mnt/koji"
+
+            subconfig.vm.provision :shell do |s|
+                s.inline = $builderKojidConf
+                s.args = $hostname
+            end
         end
         # Server Provision
         if $hostname == 'server'
-			subconfig.vm.network 'forwarded_port', guest: 80, host: 8080
+			subconfig.vm.network 'forwarded_port', guest: 80, host: $port
             if $serverLocalNFS != ""
                 subconfig.vm.provision :shell, inline: $serverLocalNFS
             end
