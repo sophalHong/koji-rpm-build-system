@@ -39,13 +39,17 @@ FWD_PORT = ENV['FWD_PORT'].to_s.strip.empty? ? 8080 : ENV['FWD_PORT'].to_i
 LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'].to_s.strip.empty? ? 'default' : ENV['LIBVIRT_STORAGE_POOL']
 
 # Public NFS server
-NFS_MOUNTPATH = ENV['NFS_MOUNTPATH'].to_s.strip.empty? ? '' : ENV['NFS_MOUNTPATH']
-if NFS_MOUNTPATH.empty?
+if ENV['NFS_MOUNTPATH'].to_s.strip.empty?
 	$useLocalNFS = true
 else
 	$useLocalNFS = false
 end
 
+LOCAL_IP = File.exist?("./data/server/IP") ? File.read("./data/server/IP").strip : SERVER_IP
+
+NFS_MOUNTPATH = ENV['NFS_MOUNTPATH'].to_s.strip.empty? ? LOCAL_IP + ":/mnt/koji" : ENV['NFS_MOUNTPATH']
+
+# User Public SSH key
 $userSSHPubKey = ENV['USER_SSHPUBKEY'].to_s.strip.empty? ? '' : ENV['USER_SSHPUBKEY']
 
 # User Scripts

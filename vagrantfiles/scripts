@@ -46,7 +46,7 @@ $serverAddBuilder = <<SCRIPT
 echo "Add koji builder '$1' ..."
 builder=$1
 cd /etc/pki/koji
-openssl genrsa -out certs/${builder}.key 2048
+openssl genrsa -out certs/${builder}.key 2048 &> /dev/null
 cat ssl.cnf | sed 's/YOUR_KOJI_HOSTNAME/'${builder}'/'> ssl2.cnf
 openssl req -config ssl2.cnf -new -nodes -out certs/${builder}.csr -key certs/${builder}.key -subj "/C=KO/ST=Gyeonggi/O=TmaxA&C/CN=${builder}"
 openssl ca -batch -config ssl2.cnf -keyfile private/koji_ca_cert.key -cert koji_ca_cert.crt -out certs/${builder}.crt -outdir certs -infiles certs/${builder}.csr
@@ -82,7 +82,8 @@ $builderKojidConf = <<SCRIPT
 echo "Setting up kojid service..."
 BUILDER_NAME=$1
 SERVER_IP=`cat /vagrant/server/IP`
-echo "$SERVER_IP koji.tmax" >> /etc/hosts
+DOMAIN=`cat /vagrant/server/koji_domain`
+echo "${SERVER_IP} ${DOMAIN}" >> /etc/hosts
 
 mkdir -p /etc/pki/koji
 cp -v /vagrant/${BUILDER_NAME}/${BUILDER_NAME}.pem /etc/pki/koji/
@@ -105,8 +106,8 @@ allowed_scms=scm.example.com:/cvs/example git.example.org:/example svn.example.o
 smtphost=mail.tmax.co.kr:587
 from_addr=ProLinux Koji Build System <sophal_hong@tmax.co.kr>
 admin_emails=sophal_hong@tmax.co.kr
-server=http://koji.tmax/kojihub
-topurl=http://koji.tmax/kojifiles
+server=http://${DOMAIN}/kojihub
+topurl=http://${DOMAIN}/kojifiles
 cert = /etc/pki/koji/${BUILDER_NAME}.pem
 serverca = /etc/pki/koji/koji_ca_cert.crt
 ca = /etc/pki/koji/koji_ca_cert.crt

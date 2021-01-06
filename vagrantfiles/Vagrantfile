@@ -23,16 +23,14 @@ if BUILDER == 0
     $vmCPUs = SERVER_CPUS
     $vmMemory = SERVER_MEMORY_SIZE_GB * 1024
 	$builderCount = BUILDER_COUNT
-	$nfsMountpath = NFS_MOUNTPATH
 else
     $box_image = "prolinux/koji-builder"
     $hostname = "builder-#{BUILDER}"
     $vmip = BUILDER_IP
     $vmCPUs = BUILDER_CPUS
     $vmMemory = BUILDER_MEMORY_SIZE_GB * 1024
-    $serverIP = (SERVER_IP.empty? and File.exist?("./data/server/IP")) ? File.read("./data/server/IP").strip : SERVER_IP
-    $nfsMountpath = NFS_MOUNTPATH.empty? ? $serverIP + ":/mnt/koji" : NFS_MOUNTPATH
 end
+$nfsMountpath = NFS_MOUNTPATH
 
 Vagrant.configure('2') do |config|
     config.vm.box = $box_image
