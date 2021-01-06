@@ -37,6 +37,10 @@ PRIVATE_IP ?= 192.168.83.10
 PUBLIC_NW_NIC ?=
 PUBLIC_IP ?=
 FWD_PORT ?= 8080
+# Public NFS server
+NFS_MOUNTPATH ?=
+# User post install script path
+USER_POST_INSTALL_SCRIPT_PATH ?=
 # === END USER OPTIONS ===
 
 show-env-config: ## Show all Environment values configuration used to create VMs.
@@ -60,6 +64,7 @@ show-env-config: ## Show all Environment values configuration used to create VMs
 	@echo "PUBLIC_IP                = '$(PUBLIC_IP)' - [empty = DHCP]"
 	@echo "PUBLIC_NW_NIC            = '$(PUBLIC_NW_NIC)' - Network Device [eno1] (empty=use private network)"
 	@echo "[Server IP = PRIVATE_IP, Builder IP = PRIVATE_IP++]"
+	@echo "NFS_MOUNTPATH            = '$(NFS_MOUNTPATH)' - Public NFS server mountpath 'IP:/path/to/dir'"
 	@echo "=========================="
 
 versions: ## Print the "imporant" tools versions out for easier debugging.

@@ -38,6 +38,14 @@ FWD_PORT = ENV['FWD_PORT'].to_s.strip.empty? ? 8080 : ENV['FWD_PORT'].to_i
 # Libvirt specific config
 LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'].to_s.strip.empty? ? 'default' : ENV['LIBVIRT_STORAGE_POOL']
 
+# Public NFS server
+NFS_MOUNTPATH = ENV['NFS_MOUNTPATH'].to_s.strip.empty? ? '' : ENV['NFS_MOUNTPATH']
+if NFS_MOUNTPATH.empty?
+	$useLocalNFS = true
+else
+	$useLocalNFS = false
+end
+
 $userSSHPubKey = ENV['USER_SSHPUBKEY'].to_s.strip.empty? ? '' : ENV['USER_SSHPUBKEY']
 
 # User Scripts

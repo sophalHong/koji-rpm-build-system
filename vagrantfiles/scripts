@@ -1,11 +1,19 @@
 # Scripts
 
-#Server
-$serverLocalNFS = <<SCRIPT
+###### Server ######
+# Get server Info
+$serverGetInfo = <<SCRIPT
+echo "Get Server Info..."
 dir=/vagrant/server
 mkdir -p ${dir}
 ip -f inet a show eth1| grep inet| awk '{ print $2}' | cut -d/ -f1 > ${dir}/IP
+openssl x509 -noout -subject -in /etc/pki/koji/kojihub.pem \
+| awk -F= '{print $NF}'| tr -d ' ' > ${dir}/koji_domain
+SCRIPT
 
+# Setup Local NFS server
+$serverSetupNFS = <<SCRIPT
+echo "Setting up NFS server..."
 dnf install nfs-utils -y
 echo '/mnt/koji *(rw,sync,no_all_squash,no_root_squash,insecure)' >> /etc/exports
 echo '/etc/pki/koji *(ro,sync,no_all_squash,no_root_squash,insecure)' >> /etc/exports
@@ -16,7 +24,26 @@ systemctl restart nfs-server.service
 systemctl status nfs-server.service --no-pager
 SCRIPT
 
+# Mount Public NFS server
+$serverMountNFS = <<SCRIPT
+echo "Mounting NFS '$1' ..."
+dnf install nfs-utils -y
+retries=5
+mkdir -p /mnt/koji
+for ((i=1; i<=retries; i++)); do
+	mount -t nfs $1 /mnt/koji && break
+	[[ $retries -eq i ]] && { echo "Failed to mount `$1` after 5 tries"; exit 1; }
+    echo "NFS mount failed, trying again (try ${i}/${retries})..."
+	sleep 3
+done
+cd /mnt/koji
+mkdir -v -p {packages,repos,work,scratch}
+chown -v apache:apache {packages,repos,work,scratch}
+SCRIPT
+
+# Add koji builder
 $serverAddBuilder = <<SCRIPT
+echo "Add koji builder '$1' ..."
 builder=$1
 cd /etc/pki/koji
 openssl genrsa -out certs/${builder}.key 2048
@@ -34,8 +61,11 @@ runuser -u admin -- koji add-host ${builder} x86_64
 runuser -u admin -- koji add-host-to-channel ${builder} createrepo
 SCRIPT
 
-# Builder
+###### Builder ######
+# Mount NFS server
 $builderMountNFS = <<SCRIPT
+echo "Mounting NFS server '$1' ..."
+dnf install nfs-utils -y
 retries=5
 mkdir -p /mnt/koji
 
@@ -47,7 +77,9 @@ for ((i=1; i<=retries; i++)); do
 done
 SCRIPT
 
+# Set kojid configuration
 $builderKojidConf = <<SCRIPT
+echo "Setting up kojid service..."
 BUILDER_NAME=$1
 SERVER_IP=`cat /vagrant/server/IP`
 echo "$SERVER_IP koji.tmax" >> /etc/hosts

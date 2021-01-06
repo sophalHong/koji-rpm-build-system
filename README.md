@@ -58,6 +58,27 @@ To start up the Vagrant Koji multi-node environment with all default values (not
 $ make up
 ```
 
+To start up the vagrant Koji multi-node with `libvirt` provider, run:
+```shell
+VAGRANT_DEFAULT_PROVIDER=libvirt make up
+```
+
+To start up the vagrant Koji multi-node using public network (DHCP), run:
+```shell
+PUBLIC_NW_NIC=eno1 make up
+```
+
+To start up the vagrant Koji multi-node using public network (static), run:
+```shell
+PUBLIC_NW_NIC=eno1 PUBLIC_IP=192.168.0.201 make up
+```
+
+To start up the vagrant Koji multi-node mounting to public NFS server, run:
+```shell
+NFS_MOUNTPATH=192.168.11.127:/mnt/koji make up
+```
+> Make sure that NFS server is running and option `no_root_squash`,`insecure` is provided in export file.
+
 ### Faster (parallel) environment start
 To start up 3 VMs in parallel run (`-j` flag does not control how many (builder) VMs are started, the `BUILDER_COUNT` variable is used for that): 
 ```shell
@@ -70,6 +91,8 @@ $ BUILDER_COUNT=3 make up -j 3
 $ make status
 server                    running (virtualbox)
 builder-1                 running (virtualbox)
+builder-2                 running (virtualbox)
+builder-3                 running (virtualbox)
 ```
 
 ### Shutting down the environment
@@ -143,6 +166,7 @@ versions                       Print the "imporant" tools versions out for easie
 | `PRIVATE_IP`                    | `192.168.83.10`          | The Koji-hub server Private IP address. (builder IP = server IP ++)     |
 | `PUBLIC_IP`                     | ``                       | The Koji-hub server Public IP address.  (builder IP = server IP ++)     |
 | `PUBLIC_NW_NIC`                 | ``                       | Public Network Interface [eno1]. Not set mean using private network     |
+| `NFS_MOUNTPATH`                 | ``                       | Public NFS server mountpath [ 192.168.11.127:/mnt/nfs-server ]          |
 
 ## Build RPM package
 SSH into server VM:
