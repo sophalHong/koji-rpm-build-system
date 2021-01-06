@@ -98,6 +98,11 @@ Vagrant.configure('2') do |config|
         if DISK_COUNT > 0 && VAGRANT_DEFAULT_PROVIDER == 'virtualbox'
             subconfig.vm.provision :diskandreboot
         end
+
+        # Change timezone
+        subconfig.vm.provision :shell,
+            :inline => 'timedatectl set-timezone Asia/Seoul'
+
         # Builder Provision
         if $hostname.include? "builder"
             subconfig.vm.provision :shell,
