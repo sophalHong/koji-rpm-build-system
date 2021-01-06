@@ -11,6 +11,13 @@ openssl x509 -noout -subject -in /etc/pki/koji/kojihub.pem \
 | awk -F= '{print $NF}'| tr -d ' ' > ${dir}/koji_domain
 SCRIPT
 
+# Change PostgreSQL timezone to Asia/Seoul
+$serverChangePsqlTimezone = <<SCRIPT
+sed -i 's/UTC/Asia\\/Seoul/g' /var/lib/pgsql/data/postgresql.conf
+systemctl restart postgresql.service
+systemctl status postgresql.service --no-pager
+SCRIPT
+
 # Setup Local NFS server
 $serverSetupNFS = <<SCRIPT
 echo "Setting up NFS server..."

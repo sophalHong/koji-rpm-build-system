@@ -108,6 +108,8 @@ Vagrant.configure('2') do |config|
             subconfig.vm.network 'forwarded_port', guest: 80, host: $port
             # Get info
             subconfig.vm.provision :shell, inline: $serverGetInfo
+            # Change Postgresql timezone
+            subconfig.vm.provision :shell, inline: $serverChangePsqlTimezone
             # Setup NFS
             if $useLocalNFS
                 subconfig.vm.provision :shell, inline: $serverSetupNFS
