@@ -152,78 +152,10 @@ versions                       Print the "imporant" tools versions out for easie
 ```
 
 ## Variables
-| Variable Name                   | Default Value            | Descriptioni                                                            |
-| ------------------------------- | ------------------------ | ------------------------------------------------------------------------|
-| `VAGRANT_DEFAULT_PROVIDER`      | `virtualbox`             | Which Vagrant provider to use. Available are `virtualbox` and `libvirt`.|
-| `VAGRANT`                       | `vagrant`                | Path to `vagrant` binary (needed when `vagrant` is no in your `PATH`)   |
-| `SERVER_CPUS`                   | `2` Core                 | Amount of cores to use for the server VM.                               |
-| `SERVER_MEMORY_SIZE_GB`         | `2` GB                   | Size of memory (in GB) to be allocated for the server VM.               |
-| `BUILDER_COUNT`                 | `2`                      | How many worker builders should be spawned.                             |
-| `BUILDER_CPUS`                  | `1` Core                 | Amount of cores to use for each builder VM.                             |
-| `BUILDER_MEMORY_SIZE_GB`        | `2` GB                   | Size of memory (in GB) to be allocated for each builder VM.             |
-| `DISK_COUNT`                    | `0`                      | Set how many additional disks will be added to the VMs.                 |
-| `DISK_SIZE_GB`                  | `20` GB                  | Size of additional disks added to the VMs.                              |
-| `PRIVATE_IP`                    | `192.168.83.10`          | The Koji-hub server Private IP address. (builder IP = server IP ++)     |
-| `PUBLIC_IP`                     | ``                       | The Koji-hub server Public IP address.  (builder IP = server IP ++)     |
-| `PUBLIC_NW_NIC`                 | ``                       | Public Network Interface [eno1]. Not set mean using private network     |
-| `NFS_MOUNTPATH`                 | ``                       | Public NFS server mountpath [ 192.168.11.127:/mnt/nfs-server ]          |
+see [Variables doc page](docs/configuration.md)
 
 ## Build RPM package
-SSH into server VM:
-```shell
-$ make ssh-server
-```
-
-Change to Koji 'admin' user:
-```shell
-$ sudo bash
-$ su - admin
-```
-
-Add 'tag':
-```shell
-koji add-tag dist-centos8
-koji add-tag --parent dist-centos8 --arches "x86_64" dist-centos8-build
-```
-
-Add external-repo:
-```shell
-# you can change location of mirror to access repository faster
-koji add-external-repo -t dist-centos8-build dist-CentOS8-BaseOS http://mirror.kakao.com/centos/8.3.2011/BaseOS/x86_64/os/
-koji add-external-repo -t dist-centos8-build dist-CentOS8-AppStream http://mirror.kakao.com/centos/8.3.2011/AppStream/x86_64/os/
-koji add-external-repo -t dist-centos8-build dist-CentOS8powertools http://mirror.kakao.com/centos/8.3.2011/PowerTools/x86_64/os/
-koji add-external-repo -t dist-centos8-build dist-Epel https://mirror.hoster.kz/fedora/epel/8/Everything/x86_64/
-koji add-target dist-centos8 dist-centos8-build
-```
-
-Add group && group-pkg:
-```shell
-koji add-group dist-centos8-build build
-koji add-group dist-centos8-build srpm-build
-
-koji add-group-pkg dist-centos8-build build bash bzip2 coreutils cpio diffutils findutils gawk gcc gcc-c++ gnupg2 grep gzip info make patchredhat-rpm-config rpm-build scl-utils-build sed shadow-utils tar unzip util-linux which
-koji add-group-pkg dist-centos8-build srpm-build bash gnupg2 libedit make openssh-clients redhat-rpm-config rpm-build rpmdevtools scl-utils-build shadow-utils wget
-```
-
-Generate repository:
-```shell
-koji regen-repo dist-centos8-build
-```
-Download RPM source package you want to build:
-```shell
-curl -LO https://vault.centos.org/8.1.1911/BaseOS/Source/SPackages/tree-1.7.0-15.el8.src.rpm
-```
-
-Quick test building (scratch):
-```shell
-koji build --scratch dist-centos8 tree-1.7.0-15.el8.src.rpm
-```
-
-Add packages and permanently maintain:
-```shell
-koji add-pkg --owner=admin dist-centos8 tree
-koji build dist-centos8 tree-1.7.0-15.el8.src.rpm
-```
+see [How to build RPM package. doc page](docs/build_rpm.md)
 
 ## Demo
 ### Start Koji multi-node cluster
