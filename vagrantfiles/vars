@@ -33,6 +33,8 @@ else
 	end
 end
 
+FWD_PORT = ENV['FWD_PORT'].to_s.strip.empty? ? 8080 : ENV['FWD_PORT'].to_i
+
 # Libvirt specific config
 LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'].to_s.strip.empty? ? 'default' : ENV['LIBVIRT_STORAGE_POOL']
 

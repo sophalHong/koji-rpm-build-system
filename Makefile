@@ -36,24 +36,30 @@ LIBVIRT_STORAGE_POOL ?=
 PRIVATE_IP ?= 192.168.83.10
 PUBLIC_NW_NIC ?=
 PUBLIC_IP ?=
+FWD_PORT ?= 8080
 # === END USER OPTIONS ===
 
 show-env-config: ## Show all Environment values configuration used to create VMs.
 	@echo "==== Environment Info ===="
-	@echo "VAGRANT_DEFAULT_PROVIDER = $(VAGRANT_DEFAULT_PROVIDER) (Default vagrant provider)"
-	@echo "VAGRANT_VAGRANTFILE      = $(VAGRANT_VAGRANTFILE) (Vagrantfile)"
+	@echo "VAGRANT_DEFAULT_PROVIDER = '$(VAGRANT_DEFAULT_PROVIDER)' - Default vagrant provider"
+	@echo "VAGRANT_VAGRANTFILE      = '$(VAGRANT_VAGRANTFILE)' - Vagrantfile"
 	@echo "-------- Server --------"
-	@echo "SERVER_COUNT             = 1 (always one)"
-	@echo "SERVER_CPUS              = $(SERVER_CPUS)"
-	@echo "SERVER_MEMORY_SIZE_GB    = $(SERVER_MEMORY_SIZE_GB) (GB)"
-	@echo "SERVER_IP                = $(SERVER_IP)"
+	@echo "SERVER_COUNT             = '1' - Number of Kojihub server host (always one)"
+	@echo "SERVER_CPUS              = '$(SERVER_CPUS)'"
+	@echo "SERVER_MEMORY_SIZE_GB    = '$(SERVER_MEMORY_SIZE_GB)' (GB)"
 	@echo "------------------------"
 	@echo "******* Builder ********"
-	@echo "BUILDER_COUNT            = $(BUILDER_COUNT)"
-	@echo "BUILDER_CPUS             = $(BUILDER_CPUS)"
-	@echo "BUILDER_MEMORY_SIZE_GB   = $(BUILDER_MEMORY_SIZE_GB) (GB)"
-	@echo "BUILDER_IP_NW            = $(BUILDER_IP_NW)[server_ip + builder#]"
+	@echo "BUILDER_COUNT            = '$(BUILDER_COUNT)' - Number of Kojid builder host"
+	@echo "BUILDER_CPUS             = '$(BUILDER_CPUS)'"
+	@echo "BUILDER_MEMORY_SIZE_GB   = '$(BUILDER_MEMORY_SIZE_GB)' (GB)"
 	@echo "************************"
+	@echo "DISK_COUNT               = '$(DISK_COUNT)' - Number of extra disk"
+	@echo "DISK_SIZE_GB             = '$(DISK_SIZE_GB)' - Size of extra disk in GB"
+	@echo "FWD_PORT                 = '$(FWD_PORT)' - Forwarding Port"
+	@echo "PRIVATE_IP               = '$(PRIVATE_IP)'"
+	@echo "PUBLIC_IP                = '$(PUBLIC_IP)' - [empty = DHCP]"
+	@echo "PUBLIC_NW_NIC            = '$(PUBLIC_NW_NIC)' - Network Device [eno1] (empty=use private network)"
+	@echo "[Server IP = PRIVATE_IP, Builder IP = PRIVATE_IP++]"
 	@echo "=========================="
 
 versions: ## Print the "imporant" tools versions out for easier debugging.
@@ -114,7 +120,7 @@ clean-builder-%: ## Remove a builder VM, where `%` is the number of the builder.
 clean-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "clean-builder-$$i"; done) ## Remove all builder VMs.
 
 clean-data: ## Remove data (shared folders) and disks of all VMs (server and builders).
-	@rm -v -rf "$(MFILECWD)data/"*
+	@rm -rf "$(MFILECWD)data/"*
 	@rm -rf $(BUILDER_CACHE_FILE)
 
 clean-force: ## Remove all drives which should normally have been removed by the normal clean-server or clean-builder-% targets.
