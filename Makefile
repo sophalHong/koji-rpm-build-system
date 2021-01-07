@@ -43,6 +43,20 @@ NFS_MOUNTPATH ?=
 USER_POST_INSTALL_SCRIPT_PATH ?=
 # === END USER OPTIONS ===
 
+vagrant-plugins-require:
+	@if [ "$(VAGRANT_DEFAULT_PROVIDER)" = "libvirt" ]; then \
+		$(MAKE) vagrant-plugins-libvirt; \
+	fi
+
+vagrant-plugins-libvirt: ## Checks that vagrant-libvirt plugin is installed, if not try to install it
+	@if ! $(VAGRANT) plugin list | grep -q vagrant-libvirt; then \
+		echo "vagrant-plugins: vagrant-libvirt is not installed, will try to install ..."; \
+		$(VAGRANT) plugin install vagrant-libvirt || { echo "vagrant-plugins: failed to install vagrant-libvirt plugin."; exit 1; }; \
+		echo "vagrant-plugins: vagrant-libvirt plugin has been installed."; \
+	else \
+		echo "vagrant-plugins: vagrant-libvirt is already installed."; \
+	fi
+
 show-env-config: ## Show all Environment values configuration used to create VMs.
 	@echo "==== Environment Info ===="
 	@echo "VAGRANT_DEFAULT_PROVIDER = '$(VAGRANT_DEFAULT_PROVIDER)' - Default vagrant provider"
@@ -79,7 +93,7 @@ versions: ## Print the "imporant" tools versions out for easier debugging.
 	-@echo "libvirtd version: $$(libvirtd --version)"
 	@echo "=== END Version Info ==="
 
-up: start ## Start Koji Vagrant multi-node cluster. starts and bootsup the server and builder VMs.
+up: vagrant-plugins-require start ## Start Koji Vagrant multi-node cluster. starts and bootsup the server and builder VMs.
 
 start:
 ifeq ($(PARALLEL_VM_START),true)
