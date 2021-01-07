@@ -31,6 +31,7 @@ BUILDER_COUNT ?= 1
 else
 BUILDER_COUNT ?= `cat $(BUILDER_CACHE_FILE)`
 endif
+BUILDER_NAME ?= my-builder
 # Libvirt
 LIBVIRT_STORAGE_POOL ?=
 # Network
@@ -207,6 +208,10 @@ endif
 
 build-test: 
 	@SCRIPT_USER=admin SCRIPT_FILE=$(MFILECWD)scripts/build_test.sh $(MAKE) run-script --no-print-directory
+
+add-builder: ## Add new koji builder [Usage: BUILDER_NAME=<name> make add-builder]
+	@SCRIPT_USER=root SCRIPT_FILE=$(MFILECWD)scripts/add-new-builder.sh \
+		SCRIPT_ARGS=$(BUILDER_NAME) $(MAKE) run-script --no-print-directory
 
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"
