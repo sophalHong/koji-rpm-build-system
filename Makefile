@@ -5,7 +5,9 @@ SHELL := /usr/bin/env bash
 MFILECWD = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILDER_CACHE_FILE ?= $(MFILECWD)data/.BUILDER_COUNT.cache
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)vagrantfiles/Vagrantfile
-SCRIPT_FILE ?= $(MFILECWD)scripts/build_test.sh
+SCRIPT_USER ?= vagrant
+SCRIPT_FILE ?=
+SCRIPT_ARGS ?=
 
 VAGRANT ?= vagrant
 VAGRANT_LOG ?=
@@ -56,15 +58,6 @@ vagrant-plugins-libvirt: ## Checks that vagrant-libvirt plugin is installed, if 
 		echo "vagrant-plugins: vagrant-libvirt plugin has been installed."; \
 	else \
 		echo "vagrant-plugins: vagrant-libvirt is already installed."; \
-	fi
-
-vagrant-plugins-scp: ## Checks that vagrant-ssh plugin is installed, if not try to install it
-	@if ! $(VAGRANT) plugin list | grep -q vagrant-scp; then \
-		echo "vagrant-plugins: vagrant-scp is not installed, will try to install ..."; \
-		$(VAGRANT) plugin install vagrant-scp || { echo "vagrant-plugins: failed to install vagrant-scp plugin."; exit 1; }; \
-		echo "vagrant-plugins: vagrant-scp plugin has been installed."; \
-	else \
-		echo "vagrant-plugins: vagrant-scp is already installed."; \
 	fi
 
 show-env-config: ## Show all Environment values configuration used to create VMs.
@@ -199,10 +192,21 @@ status-builder-%: ## Show status of a builder VM, where `%` is the number of the
 
 status-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "status-builder-$$i"; done) ## Show status of all builder VMs.
 
-run-script: vagrant-plugins-scp ## Run script on koji-server
-	$(VAGRANT) scp $(SCRIPT_FILE) scp_script
-	$(VAGRANT) ssh -- bash scp_script
+run-script: ## Run script on koji-server VM
+	$(eval DIR := $(MFILECWD)data/scripts)
+	$(eval FILENAME := $(shell echo $${SCRIPT_FILE##*/}))
+	@mkdir -p $(DIR)
+	@cp $(SCRIPT_FILE) $(DIR)/$(FILENAME)
+	@echo "[INFO] Executing '$(SCRIPT_FILE)' on server VM..."
+ifeq ($(SCRIPT_USER),$(filter $(SCRIPT_USER), SUDO sudo ROOT root))
+	$(eval USER := sudo)
+else
+	$(eval USER := "sudo runuser -u $(SCRIPT_USER) --")
+endif
+	@$(VAGRANT) ssh -- $(USER) bash /vagrant/scripts/$(FILENAME) $(SCRIPT_ARGS)
 
+build-test: 
+	@SCRIPT_USER=admin SCRIPT_FILE=$(MFILECWD)scripts/build_test.sh $(MAKE) run-script --no-print-directory
 
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"

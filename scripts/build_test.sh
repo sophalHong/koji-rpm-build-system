@@ -1,10 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-# Enable 'vagrant' user to control Koji by using admin certs
-sudo cp -r /home/admin/.koji /home/vagrant/
-sudo chown -R vagrant:vagrant /home/vagrant/.koji
-
+cd $HOME
 # test building RPM pacakge from src
 koji add-tag dist-centos8
 koji add-tag --parent dist-centos8 --arches "x86_64" dist-centos8-build
@@ -32,6 +29,6 @@ koji build --nowait --scratch dist-centos8 tmux-2.7-1.el8.src.rpm
 #koji add-pkg --owner=admin dist-centos8 tree
 #koji build --nowait dist-centos8 tree-1.7.0-15.el8.src.rpm
 #koji add-pkg --owner=admin dist-centos8 tmux
-#koji build dist-centos8 tmux-2.7-1.el8.src.rpm
+#koji build --nowait dist-centos8 tmux-2.7-1.el8.src.rpm
 #koji list-tasks
 #koji list-builds --owner=admin
