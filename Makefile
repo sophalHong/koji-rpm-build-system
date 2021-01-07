@@ -5,8 +5,8 @@ SHELL := /usr/bin/env bash
 MFILECWD = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILDER_CACHE_FILE ?= $(MFILECWD)data/.BUILDER_COUNT.cache
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)vagrantfiles/Vagrantfile
+SCRIPT_FILE ?= $(MFILECWD)scripts/default.sh
 SCRIPT_USER ?= vagrant
-SCRIPT_FILE ?=
 SCRIPT_ARGS ?=
 
 VAGRANT ?= vagrant
@@ -195,7 +195,7 @@ status-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "stat
 
 run-script: ## Run script on koji-server VM
 	$(eval DIR := $(MFILECWD)data/scripts)
-	$(eval FILENAME := $(shell echo $${SCRIPT_FILE##*/}))
+	$(eval FILENAME := $(lastword $(subst /, ,$(SCRIPT_FILE))))
 	@mkdir -p $(DIR)
 	@cp $(SCRIPT_FILE) $(DIR)/$(FILENAME)
 	@echo "[INFO] Executing '$(SCRIPT_FILE)' on server VM..."
@@ -220,8 +220,11 @@ help: ## Show this help menu.
 
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
-.PHONY: clean clean-server clean-builders clean-data \
+.PHONY: add-builder \
+	build-test \
+	clean clean-server clean-builders clean-data \
 	help \
+	run-script \
 	show-env-config \
 	ssh-config ssh-config-server ssh-config-builders \
 	ssh-server ssh-builder-% \
@@ -229,5 +232,5 @@ help: ## Show this help menu.
 	status status-server status-builders \
 	stop stop-server stop-builders \
 	vagrant-reload vagrant-reload-server vagrant-reload-builders \
-	vagrant-plugins \
+	vagrant-plugins-require vagrant-plugins-libvirt\
 	versions
