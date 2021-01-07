@@ -43,6 +43,7 @@ for ((i=1; i<=retries; i++)); do
     echo "NFS mount failed, trying again (try ${i}/${retries})..."
 	sleep 3
 done
+echo "$1 /mnt/koji nfs defaults 0 0" >> /etc/fstab
 cd /mnt/koji
 mkdir -v -p {packages,repos,work,scratch}
 chown -v apache:apache {packages,repos,work,scratch}
@@ -82,6 +83,7 @@ for ((i=1; i<=retries; i++)); do
     echo "NFS mount failed, trying again (try ${i}/${retries})..."
 	sleep 3
 done
+echo "$1 /mnt/koji nfs defaults 0 0" >> /etc/fstab
 SCRIPT
 
 # Set kojid configuration
