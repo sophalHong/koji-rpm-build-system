@@ -57,6 +57,15 @@ vagrant-plugins-libvirt: ## Checks that vagrant-libvirt plugin is installed, if 
 		echo "vagrant-plugins: vagrant-libvirt is already installed."; \
 	fi
 
+vagrant-plugins-scp: ## Checks that vagrant-ssh plugin is installed, if not try to install it
+	@if ! $(VAGRANT) plugin list | grep -q vagrant-scp; then \
+		echo "vagrant-plugins: vagrant-scp is not installed, will try to install ..."; \
+		$(VAGRANT) plugin install vagrant-scp || { echo "vagrant-plugins: failed to install vagrant-scp plugin."; exit 1; }; \
+		echo "vagrant-plugins: vagrant-scp plugin has been installed."; \
+	else \
+		echo "vagrant-plugins: vagrant-scp is already installed."; \
+	fi
+
 show-env-config: ## Show all Environment values configuration used to create VMs.
 	@echo "==== Environment Info ===="
 	@echo "VAGRANT_DEFAULT_PROVIDER = '$(VAGRANT_DEFAULT_PROVIDER)' - Default vagrant provider"
@@ -188,6 +197,11 @@ status-builder-%: ## Show status of a builder VM, where `%` is the number of the
 			sed '/^$$/d'
 
 status-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "status-builder-$$i"; done) ## Show status of all builder VMs.
+
+run-build: vagrant-plugins-scp ## Run ./scripts/build_test.sh on koji-server
+	$(VAGRANT) scp scripts/build_test.sh build_test.sh
+	$(VAGRANT) ssh -- bash build_test.sh
+
 
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"
