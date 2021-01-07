@@ -5,6 +5,7 @@ SHELL := /usr/bin/env bash
 MFILECWD = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 BUILDER_CACHE_FILE ?= $(MFILECWD)data/.BUILDER_COUNT.cache
 VAGRANT_VAGRANTFILE ?= $(MFILECWD)vagrantfiles/Vagrantfile
+SCRIPT_FILE ?= $(MFILECWD)scripts/build_test.sh
 
 VAGRANT ?= vagrant
 VAGRANT_LOG ?=
@@ -198,9 +199,9 @@ status-builder-%: ## Show status of a builder VM, where `%` is the number of the
 
 status-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "status-builder-$$i"; done) ## Show status of all builder VMs.
 
-run-build: vagrant-plugins-scp ## Run ./scripts/build_test.sh on koji-server
-	$(VAGRANT) scp scripts/build_test.sh build_test.sh
-	$(VAGRANT) ssh -- bash build_test.sh
+run-script: vagrant-plugins-scp ## Run script on koji-server
+	$(VAGRANT) scp $(SCRIPT_FILE) scp_script
+	$(VAGRANT) ssh -- bash scp_script
 
 
 help: ## Show this help menu.
