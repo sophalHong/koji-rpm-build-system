@@ -8,12 +8,7 @@ This project is created to automatically deploy **koji** build system environmen
 - [Hardware Requirements](#hardware-requirements)
 - [Quick start](#quick-start)
 - [Usage](#usage)
-  - [Starting the environment](#starting-the-environment)
-  - [Faster (parallel) environment start](#faster-parallel-environment-start)
-  - [Show status of VMs](#show-status-of-vms)
-  - [Shutting down the environment](#shutting-down-the-environment)
-  - [SSH into VM](#ssh-into-vm)
-  - [Show `make` targets](#show-make-targets)
+- [Availabe targets](#available-targets)
 - [Variables](#variables)
 - [Build RPM package](#build-rpm-package)
 - [Demo](#demo)
@@ -52,72 +47,14 @@ $ make up
 > To view on web browser: HOST_IP:8080/koji
 
 ## Usage
-### Starting the environment
-To start up the Vagrant Koji multi-node environment with all default values (not parallel) run:
-```shell
-$ make up
-```
+see [Usage doc page](docs/usage.md)
 
-To start up the vagrant Koji multi-node with `libvirt` provider, run:
-```shell
-VAGRANT_DEFAULT_PROVIDER=libvirt make up
-```
-
-To start up the vagrant Koji multi-node using public network (DHCP), run:
-```shell
-PUBLIC_NW_NIC=eno1 make up
-```
-
-To start up the vagrant Koji multi-node using public network (static), run:
-```shell
-PUBLIC_NW_NIC=eno1 PUBLIC_IP=192.168.0.201 make up
-```
-
-To start up the vagrant Koji multi-node mounting to public NFS server, run:
-```shell
-NFS_MOUNTPATH=192.168.11.127:/mnt/koji make up
-```
-> Make sure that NFS server is running and option `no_root_squash`,`insecure` is provided in export file.
-
-### Faster (parallel) environment start
-To start up 3 VMs in parallel run (`-j` flag does not control how many (builder) VMs are started, the `BUILDER_COUNT` variable is used for that): 
-```shell
-$ BUILDER_COUNT=3 make up -j 3
-```
-> The `-j 3` will cause three VMs to be started in parallel to speed up the cluster creation.
-
-### Show status of VMs
-```shell
-$ make status
-server                    running (virtualbox)
-builder-1                 running (virtualbox)
-builder-2                 running (virtualbox)
-builder-3                 running (virtualbox)
-```
-
-### Shutting down the environment
-To destroy the Vagrant environment, run:
-```shell
-$ make clean
-```
-
-### SSH into VM
-To SSH into server VM:
-```shell
-$ make ssh-server
-```
-
-To SSH into builder#1 VM:
-```shell
-$ make ssh-builder-1
-```
-
-### Show `make` targets
-To see all available targets:
+## Available targets:
 ```shell
 $ make help
 Usage: make [TARGET ...]
 
+add-builder                    Add new koji builder [Usage: BUILDER_NAME=<name> make add-builder]
 clean-builder-%                Remove a builder VM, where `%` is the number of the builder.
 clean-builders                 Remove all builder VMs.
 clean                          Destroy server and builder VMs.
@@ -125,6 +62,7 @@ clean-data                     Remove data (shared folders) and disks of all VMs
 clean-force                    Remove all drives which should normally have been removed by the normal clean-server or clean-builder-% targets.
 clean-server                   Remove the server VM.
 help                           Show this help menu.
+run-script                     Run script on koji-server VM
 show-env-config                Show all Environment values configuration used to create VMs.
 ssh-builder-%                  SSH into a builder VM, where `%` is the number of the builder.
 ssh-config-builder-%           Generate SSH config just for the one builder number given.
@@ -144,6 +82,7 @@ stop-builder-%                 Stop/Halt a builder VM, where `%` is the number o
 stop-server                    Stop/Halt the server VM.
 stop                           Stop/Halt server and all builder VMs.
 up                             Start Koji Vagrant multi-node cluster. starts and bootsup the server and builder VMs.
+vagrant-plugins-libvirt        Checks that vagrant-libvirt plugin is installed, if not try to install it
 vagrant-reload-builder-%       Run `vagrant reload` for specific builder VM.
 vagrant-reload-builders        Run `vagrant reload` for all builder VMs.
 vagrant-reload-server          Run vagrant reload for server VM.
