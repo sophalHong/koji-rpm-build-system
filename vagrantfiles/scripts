@@ -1,19 +1,23 @@
 # Scripts
 
 ###### Server ######
-# Get server Info
-$serverGetInfo = <<SCRIPT
-echo "Get Server Info..."
-dir=/vagrant/server
+# Get server Prepare script
+$serverPrepare = <<SCRIPT
+echo "Runing prepare script..."
+NAME=$1
+dir=/vagrant/${NAME}
 mkdir -p ${dir}
 ip -f inet a show eth1| grep inet| awk '{ print $2}' | cut -d/ -f1 > ${dir}/IP
-SCRIPT
 
-# Change PostgreSQL timezone to Asia/Seoul
-$serverChangePsqlTimezone = <<SCRIPT
-sed -i 's/UTC/Asia\\/Seoul/g' /var/lib/pgsql/data/postgresql.conf
-systemctl restart postgresql.service
-systemctl status postgresql.service --no-pager
+timedatectl set-timezone Asia/Seoul
+
+if [ ${NAME} == "server" ]; then
+	echo "Modify PostgreSQL timezone to 'Seoul'..."
+	sed -i 's/UTC/Asia\\/Seoul/g' /var/lib/pgsql/data/postgresql.conf
+	systemctl restart postgresql.service
+	systemctl status postgresql.service --no-pager
+fi
+
 SCRIPT
 
 # Setup Local NFS server

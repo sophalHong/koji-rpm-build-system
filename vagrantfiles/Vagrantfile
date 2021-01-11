@@ -25,11 +25,11 @@ if BUILDER == 0
 	$builderCount = BUILDER_COUNT
 else
     $box_image = "prolinux/koji-builder"
-    $hostname = BUILDER == 999 ? BUILDER_NAME : "builder-#{BUILDER}"
-    $vmip = BUILDER == 999 ? MY_IP : BUILDER_IP
+    $hostname = NAME
+    $vmip = BUILDER_IP
     $vmCPUs = BUILDER_CPUS
     $vmMemory = BUILDER_MEMORY_SIZE_GB * 1024
-    $kojiHubIp = KOJIHUB_IP
+    $serverIp = SERVER_IP
 end
 $nfsMountpath = NFS_MOUNTPATH
 
@@ -100,36 +100,24 @@ Vagrant.configure('2') do |config|
             subconfig.vm.provision :diskandreboot
         end
 
-        # Change timezone
-        subconfig.vm.provision :shell,
-            :inline => 'timedatectl set-timezone Asia/Seoul'
+        # Prepare script
+        subconfig.vm.provision :shell, inline: $serverPrepare, args: $hostname
 
         case $hostname
 		# Server Provision
         when 'server'
             subconfig.vm.network 'forwarded_port', guest: 80, host: $port
-            # Get info
-            subconfig.vm.provision :shell, inline: $serverGetInfo
-            # Change Postgresql timezone
-            subconfig.vm.provision :shell, inline: $serverChangePsqlTimezone
             # Setup NFS
-            if $useLocalNFS
-                subconfig.vm.provision :shell, inline: $serverSetupNFS
-            else
+            subconfig.vm.provision :shell, inline: $serverSetupNFS
+            # Mount public NFS if availabe
+            if $isPublicNFS
                 subconfig.vm.provision :shell, inline: $serverMountNFS, args: $nfsMountpath
-            end
-            # Add koji builder
-            (1..$builderCount).each do |i|
-                subconfig.vm.provision :shell, inline: $serverAddBuilder, args: "builder-#{i}"
             end
 
         # Builder Provision
         else
-            # Isolated builder
-            if $hostname == BUILDER_NAME
-                subconfig.vm.provision :file, source: "./scripts/add-new-builder.sh", destination: "/home/vagrant/add-new-builder.sh"
-                subconfig.vm.provision :shell, inline: $builderGetCert, args: $kojiHubIp
-            end
+            subconfig.vm.provision :file, source: "./scripts/add-new-builder.sh", destination: "/home/vagrant/add-new-builder.sh"
+            subconfig.vm.provision :shell, inline: $builderGetCert, args: $serverIp
 
             subconfig.vm.provision :shell,
                 :inline => $builderMountNFS,

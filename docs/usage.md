@@ -106,25 +106,25 @@ SCRIPT_USER=admin SCRIPT_FILE=./scripts/my_script.sh SCRIPT_ARGS="hello world" m
 ### Start new builder
 To create and start new koji builder, run:
 ```shell
-KOJIHUB_IP=192.168.0.200 make builder-up
+SERVER_IP=192.168.0.200 make builder-up
 ```
 
 To create and start new koji builder with specific name and address, run:
 ```shell
-BUILDER_NAME=arirang PUBLIC_NW_NIC=eno1 MY_IP=192.168.0.210 KOJIHUB_IP=192.168.0.200 make builder-up
+NAME=arirang PUBLIC_NW_NIC=eno1 BUILDER_IP=192.168.0.210 SERVER_IP=192.168.0.200 make builder-up
 ```
 
 To create and start new koji builder with specific NFS, run:
 ```shell
-NFS_MOUNTPATH=192.168.11.127:/mnt/koji KOJIHUB_IP=192.168.0.200 make builder-up
+NFS_MOUNTPATH=192.168.11.127:/mnt/koji SERVER_IP=192.168.0.200 make builder-up
 ```
 
 To SSH into builder VM, run:
 ```shell
-BUILDER_NAME=arirang make builder-ssh
+NAME=arirang make builder-ssh
 ```
 
 To destroy builder VM, run:
 ```shell
-BUILDER_NAME=arirang make builder-clean
+NAME=arirang make builder-clean
 ```

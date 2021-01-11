@@ -34,15 +34,14 @@ endif
 # Libvirt
 LIBVIRT_STORAGE_POOL ?=
 # Network
-## Private Network (Server ip = PRIVATE_IP, Builder ip = PRIVATE_IP++)
 ## Public Network (PUBLIC_NW_NIC=eno1) | Not set = using private network
-PRIVATE_IP ?= 192.168.83.10
+SERVER_IP ?=
 PUBLIC_NW_NIC ?=
-PUBLIC_IP ?=
-FWD_PORT ?= 8080
+FWD_PORT ?=
+## BUILDER_IP = SERVER_IP++
 ## Add new builder
-MY_IP ?=
-BUILDER_NAME ?= my-builder
+IP ?=
+NAME ?= my-builder
 # Public NFS server
 NFS_MOUNTPATH ?=
 # User post install script path
@@ -216,9 +215,9 @@ server-add-builder: ## Generate new builder cert, which `BUILDER_NAME=<name>`
 		SCRIPT_ARGS=$(BUILDER_NAME) $(MAKE) run-script --no-print-directory
 
 builder-up: vagrant-plugins-require ## Start new koji builder
-ifndef KOJIHUB_IP
-	$(info Usage: $ KOJIHUB_IP=<your-server-ip> make builder-up)
-	$(error 'KOJIHUB_IP' environment is not set!)
+ifeq ($(SERVER_IP),)
+	$(info Usage: $ SERVER_IP=<kojihub-ip> make builder-up)
+	$(error 'SERVER_IP' environment is required!)
 endif
 	@BUILDER=999 $(VAGRANT) up --provider $(VAGRANT_DEFAULT_PROVIDER)
 

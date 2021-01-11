@@ -54,8 +54,8 @@ see [Usage doc page](docs/usage.md)
 $ make help
 Usage: make [TARGET ...]
 
-builder-clean                  Destroy one koji builder `BUILDER_NAME=<name>`
-builder-ssh                    SSH into a builder VM, which `BUILDER_NAME=<name>`
+builder-clean                  Destroy one koji builder `NAME=<name>`
+builder-ssh                    SSH into a builder VM, which `NAME=<name>`
 builder-up                     Start new koji builder
 clean-builder-%                Remove a builder VM, where `%` is the number of the builder.
 clean-builders                 Remove all builder VMs.
@@ -65,7 +65,7 @@ clean-force                    Remove all drives which should normally have been
 clean-server                   Remove the server VM.
 help                           Show this help menu.
 run-script                     Run script on koji-server VM, which `SCRIPT_FILE=/path/to/script`
-server-add-builder             Generate new builder cert, which `BUILDER_NAME=<name>`
+server-add-builder             Generate new builder cert, which `NAME=<name>`
 show-env-config                Show all Environment values configuration used to create VMs.
 ssh-builder-%                  SSH into a builder VM, where `%` is the number of the builder.
 ssh-config-builder-%           Generate SSH config just for the one builder number given.

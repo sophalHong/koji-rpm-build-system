@@ -17,26 +17,28 @@ BUILDER_MEMORY_SIZE_GB = ENV['BUILDER_MEMORY_SIZE_GB'].to_s.strip.empty? ? 2 : E
 if ENV['PUBLIC_NW_NIC'].to_s.strip.empty?
 	$isPrivateNetwork = true
 	PUBLIC_NW_NIC = ''
-	SERVER_IP = ENV['PRIVATE_IP'].to_s.strip.empty? ? '192.168.83.10' : ENV['PRIVATE_IP']
-	BUILDER_IP = SERVER_IP[0...SERVER_IP.rindex('.')] + '.' \
-		+ (BUILDER + SERVER_IP.split(".").last.to_i).to_s
-else
-	$isPrivateNetwork = false
-	PUBLIC_NW_NIC = ENV['PUBLIC_NW_NIC']
-	if ENV['PUBLIC_IP'].to_s.strip.empty?
-		SERVER_IP = ''
-		BUILDER_IP = ''
+	SERVER_IP = ENV['SERVER_IP'].to_s.strip.empty? ? '192.168.83.10' : ENV['SERVER_IP']
+	if BUILDER == 999
+		# Isolated Builder
+		BUILDER_IP = ENV['BUILDER_IP'].to_s.strip.empty? ? '192.168.83.100' : ENV['BUILDER_IP']
 	else
-		SERVER_IP = ENV['PUBLIC_IP']
 		BUILDER_IP = SERVER_IP[0...SERVER_IP.rindex('.')] + '.' \
 			+ (BUILDER + SERVER_IP.split(".").last.to_i).to_s
 	end
+else
+	$isPrivateNetwork = false
+	PUBLIC_NW_NIC = ENV['PUBLIC_NW_NIC']
+	SERVER_IP = ENV['SERVER_IP'].to_s.strip.empty? ? '' : ENV['SERVER_IP']
+	if BUILDER == 999
+		# Isolated Builder
+		BUILDER_IP = ENV['BUILDER_IP'].to_s.strip.empty? ? '' : ENV['BUILDER_IP']
+	else
+		BUILDER_IP = SERVER_IP.empty? ? '' : SERVER_IP[0...SERVER_IP.rindex('.')] \
+			+ '.' + (BUILDER + SERVER_IP.split(".").last.to_i).to_s
+	end
 end
 
-# Isolated Builder
-KOJIHUB_IP = ENV['KOJIHUB_IP'].to_s.strip.empty? ? '' : ENV['KOJIHUB_IP']
-MY_IP = ENV['MY_IP'].to_s.strip.empty? ? '192.168.83.100' : ENV['MY_IP']
-BUILDER_NAME = ENV['BUILDER_NAME'].to_s.strip.empty? ? 'my-builder' : ENV['BUILDER_NAME']
+NAME = BUILDER == 999 ? ENV['NAME'].to_s.strip.empty? ? 'my-builder' : ENV['NAME'] : "builder-" + BUILDER.to_s
 
 FWD_PORT = ENV['FWD_PORT'].to_s.strip.empty? ? 8080 : ENV['FWD_PORT'].to_i
 
@@ -44,15 +46,13 @@ FWD_PORT = ENV['FWD_PORT'].to_s.strip.empty? ? 8080 : ENV['FWD_PORT'].to_i
 LIBVIRT_STORAGE_POOL = ENV['LIBVIRT_STORAGE_POOL'].to_s.strip.empty? ? 'default' : ENV['LIBVIRT_STORAGE_POOL']
 
 # Public NFS server
-if ENV['NFS_MOUNTPATH'].to_s.strip.empty?
-	$useLocalNFS = true
-else
-	$useLocalNFS = false
-end
+$isPublicNFS = ENV['NFS_MOUNTPATH'].to_s.strip.empty? ? false : true
 
-LOCAL_IP = File.exist?("./data/server/IP") ? File.read("./data/server/IP").strip : SERVER_IP
+CACHE_IP = SERVER_IP.empty? ? \
+	File.exist?("./data/server/IP") ? File.read("./data/server/IP").strip : '' \
+	: SERVER_IP
 
-NFS_MOUNTPATH = ENV['NFS_MOUNTPATH'].to_s.strip.empty? ? LOCAL_IP + ":/mnt/koji" : ENV['NFS_MOUNTPATH']
+NFS_MOUNTPATH = ENV['NFS_MOUNTPATH'].to_s.strip.empty? ? CACHE_IP + ":/mnt/koji" : ENV['NFS_MOUNTPATH']
 
 # User Public SSH key
 $userSSHPubKey = ENV['USER_SSHPUBKEY'].to_s.strip.empty? ? '' : ENV['USER_SSHPUBKEY']
