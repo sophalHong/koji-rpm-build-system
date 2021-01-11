@@ -227,6 +227,9 @@ builder-clean:  ## Destroy one koji builder `BUILDER_NAME=<name>`
 builder-ssh: ## SSH into a builder VM, which `BUILDER_NAME=<name>`
 	@BUILDER=999 $(VAGRANT) ssh $(BUILDER_NAME)
 
+list: ## List all created VMs
+	@$(VAGRANT) global-status
+
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"
 	@echo
@@ -237,6 +240,7 @@ help: ## Show this help menu.
 .PHONY: builder-up builder-clean builder-ssh \
 	clean clean-server clean-builders clean-data \
 	help \
+	list \
 	run-script \
 	server-add-builder \
 	show-env-config \

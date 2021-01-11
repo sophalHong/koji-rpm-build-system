@@ -64,6 +64,7 @@ clean-data                     Remove data (shared folders) and disks of all VMs
 clean-force                    Remove all drives which should normally have been removed by the normal clean-server or clean-builder-% targets.
 clean-server                   Remove the server VM.
 help                           Show this help menu.
+list                           List all created VMsA
 run-script                     Run script on koji-server VM, which `SCRIPT_FILE=/path/to/script`
 server-add-builder             Generate new builder cert, which `NAME=<name>`
 show-env-config                Show all Environment values configuration used to create VMs.
