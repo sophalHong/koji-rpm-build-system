@@ -31,7 +31,6 @@ BUILDER_COUNT ?= 1
 else
 BUILDER_COUNT ?= `cat $(BUILDER_CACHE_FILE)`
 endif
-BUILDER_NAME ?= my-builder
 # Libvirt
 LIBVIRT_STORAGE_POOL ?=
 # Network
@@ -41,6 +40,9 @@ PRIVATE_IP ?= 192.168.83.10
 PUBLIC_NW_NIC ?=
 PUBLIC_IP ?=
 FWD_PORT ?= 8080
+## Add new builder
+MY_IP ?=
+BUILDER_NAME ?= my-builder
 # Public NFS server
 NFS_MOUNTPATH ?=
 # User post install script path
@@ -193,7 +195,7 @@ status-builder-%: ## Show status of a builder VM, where `%` is the number of the
 
 status-builders: $(shell for (( i=1; i<=$(BUILDER_COUNT); i+=1 )); do echo "status-builder-$$i"; done) ## Show status of all builder VMs.
 
-run-script: ## Run script on koji-server VM
+run-script: ## Run script on koji-server VM, which `SCRIPT_FILE=/path/to/script`
 	$(eval DIR := $(MFILECWD)data/scripts)
 	$(eval FILENAME := $(lastword $(subst /, ,$(SCRIPT_FILE))))
 	@mkdir -p $(DIR)
@@ -206,12 +208,25 @@ else
 endif
 	@$(VAGRANT) ssh -- $(USER) bash /vagrant/scripts/$(FILENAME) $(SCRIPT_ARGS)
 
-build-test: 
+test-build-rpm: ## Run ./script/build_test.sh to test building RPM package
 	@SCRIPT_USER=admin SCRIPT_FILE=$(MFILECWD)scripts/build_test.sh $(MAKE) run-script --no-print-directory
 
-add-builder: ## Add new koji builder [Usage: BUILDER_NAME=<name> make add-builder]
+server-add-builder: ## Generate new builder cert, which `BUILDER_NAME=<name>`
 	@SCRIPT_USER=root SCRIPT_FILE=$(MFILECWD)scripts/add-new-builder.sh \
 		SCRIPT_ARGS=$(BUILDER_NAME) $(MAKE) run-script --no-print-directory
+
+builder-up: vagrant-plugins-require ## Start new koji builder
+ifndef KOJIHUB_IP
+	$(info Usage: $ KOJIHUB_IP=<your-server-ip> make builder-up)
+	$(error 'KOJIHUB_IP' environment is not set!)
+endif
+	@BUILDER=999 $(VAGRANT) up --provider $(VAGRANT_DEFAULT_PROVIDER)
+
+builder-clean:  ## Destroy one koji builder `BUILDER_NAME=<name>`
+	@BUILDER=999 $(VAGRANT) destroy -f $(BUILDER_NAME)
+
+builder-ssh: ## SSH into a builder VM, which `BUILDER_NAME=<name>`
+	@BUILDER=999 $(VAGRANT) ssh $(BUILDER_NAME)
 
 help: ## Show this help menu.
 	@echo "Usage: make [TARGET ...]"
@@ -220,17 +235,18 @@ help: ## Show this help menu.
 
 .DEFAULT_GOAL := help
 .EXPORT_ALL_VARIABLES:
-.PHONY: add-builder \
-	build-test \
+.PHONY: builder-up builder-clean builder-ssh \
 	clean clean-server clean-builders clean-data \
 	help \
 	run-script \
+	server-add-builder \
 	show-env-config \
 	ssh-config ssh-config-server ssh-config-builders \
 	ssh-server ssh-builder-% \
 	start-server start-builders \
 	status status-server status-builders \
 	stop stop-server stop-builders \
+	test-build-rpm \
 	vagrant-reload vagrant-reload-server vagrant-reload-builders \
 	vagrant-plugins-require vagrant-plugins-libvirt\
 	versions

@@ -10,6 +10,7 @@
 - [Show `make` targets](#show-make-targets)
 - [Add new koji builder](#add-new-koji-builder)
 - [Run script on koji-server VM](#run-script-on-koji-server-vm)
+- [Start new builder](#start-new-builder)
 
 ### Starting the environment
 To start up the Vagrant Koji multi-node environment with all default values (not parallel) run:
@@ -83,7 +84,7 @@ make help
 
 ### Add new koji builder
 ```shell
-BUILDER_NAME=new-builder make add-builder
+BUILDER_NAME=new-builder make server-add-builder
 ```
 
 ### Run script on koji-server VM
@@ -100,4 +101,30 @@ SCRIPT_USER=root SCRIPT_FILE=./scripts/my_script.sh make run-script
 To run script with `admin` user and args, run:
 ```shell
 SCRIPT_USER=admin SCRIPT_FILE=./scripts/my_script.sh SCRIPT_ARGS="hello world" make run-script
+```
+
+### Start new builder
+To create and start new koji builder, run:
+```shell
+KOJIHUB_IP=192.168.0.200 make builder-up
+```
+
+To create and start new koji builder with specific name and address, run:
+```shell
+BUILDER_NAME=arirang PUBLIC_NW_NIC=eno1 MY_IP=192.168.0.210 KOJIHUB_IP=192.168.0.200 make builder-up
+```
+
+To create and start new koji builder with specific NFS, run:
+```shell
+NFS_MOUNTPATH=192.168.11.127:/mnt/koji KOJIHUB_IP=192.168.0.200 make builder-up
+```
+
+To SSH into builder VM, run:
+```shell
+BUILDER_NAME=arirang make builder-ssh
+```
+
+To destroy builder VM, run:
+```shell
+BUILDER_NAME=arirang make builder-clean
 ```

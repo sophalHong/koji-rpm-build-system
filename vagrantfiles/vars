@@ -33,6 +33,11 @@ else
 	end
 end
 
+# Isolated Builder
+KOJIHUB_IP = ENV['KOJIHUB_IP'].to_s.strip.empty? ? '' : ENV['KOJIHUB_IP']
+MY_IP = ENV['MY_IP'].to_s.strip.empty? ? '192.168.83.100' : ENV['MY_IP']
+BUILDER_NAME = ENV['BUILDER_NAME'].to_s.strip.empty? ? 'my-builder' : ENV['BUILDER_NAME']
+
 FWD_PORT = ENV['FWD_PORT'].to_s.strip.empty? ? 8080 : ENV['FWD_PORT'].to_i
 
 # Libvirt specific config

@@ -54,7 +54,9 @@ see [Usage doc page](docs/usage.md)
 $ make help
 Usage: make [TARGET ...]
 
-add-builder                    Add new koji builder [Usage: BUILDER_NAME=<name> make add-builder]
+builder-clean                  Destroy one koji builder `BUILDER_NAME=<name>`
+builder-ssh                    SSH into a builder VM, which `BUILDER_NAME=<name>`
+builder-up                     Start new koji builder
 clean-builder-%                Remove a builder VM, where `%` is the number of the builder.
 clean-builders                 Remove all builder VMs.
 clean                          Destroy server and builder VMs.
@@ -62,7 +64,8 @@ clean-data                     Remove data (shared folders) and disks of all VMs
 clean-force                    Remove all drives which should normally have been removed by the normal clean-server or clean-builder-% targets.
 clean-server                   Remove the server VM.
 help                           Show this help menu.
-run-script                     Run script on koji-server VM
+run-script                     Run script on koji-server VM, which `SCRIPT_FILE=/path/to/script`
+server-add-builder             Generate new builder cert, which `BUILDER_NAME=<name>`
 show-env-config                Show all Environment values configuration used to create VMs.
 ssh-builder-%                  SSH into a builder VM, where `%` is the number of the builder.
 ssh-config-builder-%           Generate SSH config just for the one builder number given.
@@ -81,6 +84,7 @@ stop-builders                  Stop/Halt all builder VMs.
 stop-builder-%                 Stop/Halt a builder VM, where `%` is the number of the builder.
 stop-server                    Stop/Halt the server VM.
 stop                           Stop/Halt server and all builder VMs.
+test-build-rpm                 Run ./script/build_test.sh to test building RPM package
 up                             Start Koji Vagrant multi-node cluster. starts and bootsup the server and builder VMs.
 vagrant-plugins-libvirt        Checks that vagrant-libvirt plugin is installed, if not try to install it
 vagrant-reload-builder-%       Run `vagrant reload` for specific builder VM.

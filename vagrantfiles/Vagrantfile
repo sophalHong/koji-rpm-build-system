@@ -25,10 +25,11 @@ if BUILDER == 0
 	$builderCount = BUILDER_COUNT
 else
     $box_image = "prolinux/koji-builder"
-    $hostname = "builder-#{BUILDER}"
-    $vmip = BUILDER_IP
+    $hostname = BUILDER == 999 ? BUILDER_NAME : "builder-#{BUILDER}"
+    $vmip = BUILDER == 999 ? MY_IP : BUILDER_IP
     $vmCPUs = BUILDER_CPUS
     $vmMemory = BUILDER_MEMORY_SIZE_GB * 1024
+    $kojiHubIp = KOJIHUB_IP
 end
 $nfsMountpath = NFS_MOUNTPATH
 
@@ -103,8 +104,9 @@ Vagrant.configure('2') do |config|
         subconfig.vm.provision :shell,
             :inline => 'timedatectl set-timezone Asia/Seoul'
 
-        # Server Provision
-        if $hostname == 'server'
+        case $hostname
+		# Server Provision
+        when 'server'
             subconfig.vm.network 'forwarded_port', guest: 80, host: $port
             # Get info
             subconfig.vm.provision :shell, inline: $serverGetInfo
@@ -120,10 +122,15 @@ Vagrant.configure('2') do |config|
             (1..$builderCount).each do |i|
                 subconfig.vm.provision :shell, inline: $serverAddBuilder, args: "builder-#{i}"
             end
-        end
 
         # Builder Provision
-        if $hostname.include? "builder"
+        else
+            # Isolated builder
+            if $hostname == BUILDER_NAME
+                subconfig.vm.provision :file, source: "./scripts/add-new-builder.sh", destination: "/home/vagrant/add-new-builder.sh"
+                subconfig.vm.provision :shell, inline: $builderGetCert, args: $kojiHubIp
+            end
+
             subconfig.vm.provision :shell,
                 :inline => $builderMountNFS,
                 :args => $nfsMountpath

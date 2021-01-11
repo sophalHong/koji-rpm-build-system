@@ -7,8 +7,6 @@ echo "Get Server Info..."
 dir=/vagrant/server
 mkdir -p ${dir}
 ip -f inet a show eth1| grep inet| awk '{ print $2}' | cut -d/ -f1 > ${dir}/IP
-openssl x509 -noout -subject -in /etc/pki/koji/kojihub.pem \
-| awk -F= '{print $NF}'| tr -d ' ' > ${dir}/koji_domain
 SCRIPT
 
 # Change PostgreSQL timezone to Asia/Seoul
@@ -70,6 +68,30 @@ runuser -u admin -- koji add-host-to-channel ${builder} createrepo
 SCRIPT
 
 ###### Builder ######
+# Isolated builder
+$builderGetCert = <<SCRIPT
+retries=5
+for ((i=1; i<=retries; i++)); do
+	ping -c 1 $1 > /dev/null && break
+	[[ $retries -eq i ]] && { echo "[ERROR] ping failed `$1` after 5 tries"; exit 1; }
+    echo "[INFO] `$1` ping failed, trying again (try ${i}/${retries})..."
+	sleep 3
+done
+
+SERVER_IP=$1
+USER=vagrant
+PASSWD=vagrant
+
+mkdir -p /vagrant/`hostname`
+mkdir -p /vagrant/server
+echo ${SERVER_IP} > /vagrant/server/IP
+
+sshpass -p ${PASSWD} scp -o "StrictHostKeyChecking no" /home/vagrant/add-new-builder.sh ${USER}@${SERVER_IP}:/home/vagrant/
+sshpass -p ${PASSWD} ssh ${USER}@${SERVER_IP} -- sudo bash /home/vagrant/add-new-builder.sh `hostname`
+sshpass -p ${PASSWD} scp ${USER}@${SERVER_IP}:/etc/pki/koji/`hostname`.pem /vagrant/`hostname`/
+sshpass -p ${PASSWD} scp ${USER}@${SERVER_IP}:/etc/pki/koji/koji_ca_cert.crt /vagrant/server/
+SCRIPT
+
 # Mount NFS server
 $builderMountNFS = <<SCRIPT
 echo "Mounting NFS server '$1' ..."
@@ -89,10 +111,11 @@ SCRIPT
 # Set kojid configuration
 $builderKojidConf = <<SCRIPT
 echo "Setting up kojid service..."
+
 BUILDER_NAME=$1
 SERVER_IP=`cat /vagrant/server/IP`
-DOMAIN=`cat /vagrant/server/koji_domain`
-echo "${SERVER_IP} ${DOMAIN}" >> /etc/hosts
+DOMAIN=`openssl x509 -noout -subject -in /vagrant/server/koji_ca_cert.crt \
+| awk -F= '{print $NF}'| tr -d ' '`
 
 mkdir -p /etc/pki/koji
 cp -v /vagrant/${BUILDER_NAME}/${BUILDER_NAME}.pem /etc/pki/koji/
@@ -101,6 +124,7 @@ cp -v /vagrant/server/koji_ca_cert.crt /etc/pki/koji/
 yum install -y koji-builder
 mv /etc/kojid/kojid.conf /etc/kojid/kojid.conf.old
 
+echo "${SERVER_IP} ${DOMAIN}" >> /etc/hosts
 cat > /etc/kojid/kojid.conf <<EOF
 [kojid]
 user=${BUILDER_NAME}
@@ -123,6 +147,6 @@ ca = /etc/pki/koji/koji_ca_cert.crt
 EOF
 
 systemctl enable kojid.service
-systemctl start kojid.service
+systemctl restart kojid.service
 systemctl status kojid.service --no-pager
 SCRIPT
