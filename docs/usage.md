@@ -18,6 +18,11 @@ To start up the Vagrant Koji multi-node environment with all default values (not
 make up
 ```
 
+To start up the Koji cluster version 7 (Default: 8), run:
+```shell
+VERSION=7 make up
+```
+
 To start up the vagrant Koji multi-node with `libvirt` provider, run:
 ```shell
 VAGRANT_DEFAULT_PROVIDER=libvirt make up

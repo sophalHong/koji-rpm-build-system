@@ -11,9 +11,6 @@ This project is created to automatically deploy **koji** build system environmen
 - [Availabe targets](#available-targets)
 - [Variables](#variables)
 - [Build RPM package](#build-rpm-package)
-- [Demo](#demo)
-  - [Start Koji multi-node cluster](#start-koji-multi-node-cluster)
-  - [Destroy Cluster](#destroy-cluster)
 - [Creating an Issue](#creating-an-issue)
 
 <!-- /TOC -->
@@ -100,11 +97,6 @@ see [Variables doc page](docs/configuration.md)
 
 ## Build RPM package
 see [How to build RPM package. doc page](docs/build_rpm.md)
-
-## Demo
-### Start Koji multi-node cluster
-
-### Destroy Cluster
 
 ## Creating an Issue
 Please attach the `make versions` output to the issue as is shown in the issue template. This makes debugging easier.
