@@ -1,5 +1,15 @@
 # Variables
 
+# Koji Version
+VERSION = ENV['VERSION'].to_s.strip.empty? ? 8 : ENV['VERSION'].to_i
+if VERSION == 7
+	SERVER_BOX = "prolinux/koji-server-7"
+	BUILDER_BOX = "prolinux/koji-builder-7"
+else
+	SERVER_BOX = "prolinux/koji-server"
+	BUILDER_BOX = "prolinux/koji-builder"
+end
+
 # Builder node count
 BUILDER_COUNT = ENV['BUILDER_COUNT'].to_s.strip.empty? ? 1 : ENV['BUILDER_COUNT'].to_i
 

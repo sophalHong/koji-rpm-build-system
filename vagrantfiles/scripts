@@ -23,7 +23,7 @@ SCRIPT
 # Setup Local NFS server
 $serverSetupNFS = <<SCRIPT
 echo "Setting up NFS server..."
-dnf install nfs-utils -y
+yum install nfs-utils -y
 echo '/mnt/koji *(rw,sync,no_all_squash,no_root_squash,insecure)' >> /etc/exports
 echo '/etc/pki/koji *(ro,sync,no_all_squash,no_root_squash,insecure)' >> /etc/exports
 exportfs -arv
@@ -36,7 +36,7 @@ SCRIPT
 # Mount Public NFS server
 $serverMountNFS = <<SCRIPT
 echo "Mounting NFS '$1' ..."
-dnf install nfs-utils -y
+yum install nfs-utils -y
 retries=5
 mkdir -p /mnt/koji
 for ((i=1; i<=retries; i++)); do
@@ -99,7 +99,7 @@ SCRIPT
 # Mount NFS server
 $builderMountNFS = <<SCRIPT
 echo "Mounting NFS server '$1' ..."
-dnf install nfs-utils -y
+yum install nfs-utils -y
 retries=5
 mkdir -p /mnt/koji
 

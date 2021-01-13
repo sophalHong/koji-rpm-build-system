@@ -16,7 +16,7 @@ load $vagrantfilescripts
 
 # Load the type specific variables (e.g., server, builder) (0 is equal server)
 if BUILDER == 0
-    $box_image = "prolinux/koji-server"
+    $box_image = SERVER_BOX
     $hostname = 'server'
     $vmip = SERVER_IP
     $port = FWD_PORT
@@ -24,7 +24,7 @@ if BUILDER == 0
     $vmMemory = SERVER_MEMORY_SIZE_GB * 1024
 	$builderCount = BUILDER_COUNT
 else
-    $box_image = "prolinux/koji-builder"
+    $box_image = BUILDER_BOX
     $hostname = NAME
     $vmip = BUILDER_IP
     $vmCPUs = BUILDER_CPUS

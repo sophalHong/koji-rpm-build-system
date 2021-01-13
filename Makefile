@@ -16,6 +16,8 @@ VAGRANT_LOG ?=
 REVERSE_LINES=sed -e '1!G;h;$$!d'
 
 # === BEGIN USER OPTIONS ===
+# Koji Version
+VERSION ?= 8
 # Vagrant Provider
 VAGRANT_DEFAULT_PROVIDER ?= virtualbox
 # Disk setup
