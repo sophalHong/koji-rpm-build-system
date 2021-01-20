@@ -39,7 +39,7 @@ LIBVIRT_STORAGE_POOL ?=
 ## Public Network (PUBLIC_NW_NIC=eno1) | Not set = using private network
 SERVER_IP ?=
 PUBLIC_NW_NIC ?=
-FWD_PORT ?=
+FWD_PORT ?= 8080
 ## BUILDER_IP = SERVER_IP++
 ## Add new builder
 IP ?=
@@ -65,33 +65,27 @@ vagrant-plugins-libvirt: ## Checks that vagrant-libvirt plugin is installed, if 
 	fi
 
 show-env-config: ## Show all Environment values configuration used to create VMs.
-	@echo "==== Environment Info ===="
+	@echo "============= Environment Info =============="
 	@echo "VAGRANT_DEFAULT_PROVIDER = '$(VAGRANT_DEFAULT_PROVIDER)' - Default vagrant provider"
 	@echo "VAGRANT_VAGRANTFILE      = '$(VAGRANT_VAGRANTFILE)' - Vagrantfile"
 	@echo "VERSION                  = '$(VERSION)' - Koji version (7 or 8)"
-	@echo "-------- Server --------"
 	@echo "SERVER_COUNT             = '1' - Number of Kojihub server host (always one)"
 	@echo "SERVER_CPUS              = '$(SERVER_CPUS)'"
 	@echo "SERVER_MEMORY_SIZE_GB    = '$(SERVER_MEMORY_SIZE_GB)' (GB)"
-	@echo "------------------------"
-	@echo "******* Builder ********"
 	@echo "BUILDER_COUNT            = '$(BUILDER_COUNT)' - Number of Kojid builder host"
 	@echo "BUILDER_CPUS             = '$(BUILDER_CPUS)'"
 	@echo "BUILDER_MEMORY_SIZE_GB   = '$(BUILDER_MEMORY_SIZE_GB)' (GB)"
-	@echo "************************"
 	@echo "DISK_COUNT               = '$(DISK_COUNT)' - Number of extra disk"
 	@echo "DISK_SIZE_GB             = '$(DISK_SIZE_GB)' - Size of extra disk in GB"
 	@echo "PUBLIC_NW_NIC            = '$(PUBLIC_NW_NIC)' - Network Device [eno1] (empty=use private network)"
 	@echo "SERVER_IP                = '$(SERVER_IP)'"
 	@echo "BUILDER_IP               = '' - = SERVER_IP++"
-	@echo "FWD_PORT                 = '$(FWD_PORT)' - Forwarding Port"
+	@echo "FWD_PORT                 = '$(FWD_PORT)' - Forwarding Port [koji-server]:80 -> [host]:$(FWD_PORT)"
 	@echo "NFS_MOUNTPATH            = '$(NFS_MOUNTPATH)' - Public NFS server mountpath 'IP:/path/to/dir'"
-	@echo "+++++ Execute Script +++++"
 	@echo "SCRIPT_FILE              = '$(SCRIPT_FILE)' - Path to script file"
 	@echo "SCRIPT_ARGS              = '$(SCRIPT_ARGS)' - Arguments of script file"
 	@echo "SCRIPT_USER              = '$(SCRIPT_USER)' - which 'user' to run"
-	@echo "++++++++++++++++++++++++++"
-	@echo "=========================="
+	@echo "============================================="
 
 versions: ## Print the "imporant" tools versions out for easier debugging.
 	@echo "=== BEGIN Version Info ==="
