@@ -215,7 +215,12 @@ endif
 	@$(VAGRANT) ssh -- $(USER) bash /vagrant/scripts/$(FILENAME) $(SCRIPT_ARGS)
 
 test-build-rpm: ## Run ./script/build_test.sh to test building RPM package
-	@SCRIPT_USER=admin SCRIPT_FILE=$(MFILECWD)scripts/build_test.sh $(MAKE) run-script --no-print-directory
+ifeq ($(VERSION), 7)
+	$(eval BUILD_TEST := $(MFILECWD)scripts/build_test-7.sh)
+else
+	$(eval BUILD_TEST := $(MFILECWD)scripts/build_test.sh)
+endif
+	@SCRIPT_USER=admin SCRIPT_FILE=$(BUILD_TEST) $(MAKE) run-script --no-print-directory
 
 server-add-builder: ## Generate new builder cert, which `BUILDER_NAME=<name>`
 	@SCRIPT_USER=root SCRIPT_FILE=$(MFILECWD)scripts/add-new-builder.sh \
