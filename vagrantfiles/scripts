@@ -11,6 +11,9 @@ ip -f inet a show eth1| grep inet| awk '{ print $2}' | cut -d/ -f1 > ${dir}/IP
 
 timedatectl set-timezone Asia/Seoul
 
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+systemctl restart sshd.service
+
 if [ ${NAME} == "server" ]; then
 	echo "Modify PostgreSQL timezone to 'Seoul'..."
 	sed -i 's/UTC/Asia\\/Seoul/g' /var/lib/pgsql/data/postgresql.conf
