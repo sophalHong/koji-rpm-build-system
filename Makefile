@@ -51,9 +51,9 @@ USER_POST_INSTALL_SCRIPT_PATH ?=
 # === END USER OPTIONS ===
 
 vagrant-plugins-require:
-	@if [ "$(VAGRANT_DEFAULT_PROVIDER)" = "libvirt" ]; then \
-		$(MAKE) vagrant-plugins-libvirt; \
-	fi
+ifeq ($(VAGRANT_DEFAULT_PROVIDER), libvirt)
+	@$(MAKE) vagrant-plugins-libvirt --no-print-directory
+endif
 
 vagrant-plugins-libvirt: ## Checks that vagrant-libvirt plugin is installed, if not try to install it
 	@if ! $(VAGRANT) plugin list | grep -q vagrant-libvirt; then \
