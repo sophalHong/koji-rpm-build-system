@@ -1,5 +1,13 @@
 # ProLinux image build guide
 ## Install packages
+- Add repository (/etc/yum.repos.d/imagefactory.repo)
+```shell
+[imagefactory]
+name=ProLinux imagefactory
+baseurl=http://pldev-repo-21.tk/prolinux-dev/sophal/imagefactory/
+gpgcheck=0
+enabled=1
+```
 - Dependency packages
 ```shell
 sudo yum install -y pykickstart VMDKstream virt-install
